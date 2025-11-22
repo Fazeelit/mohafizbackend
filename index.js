@@ -2,7 +2,6 @@ import express from "express";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import cors from "cors";
-import rateLimit from "express-rate-limit";
 
 // Load environment variables
 dotenv.config();
@@ -16,25 +15,24 @@ import emergencyRoutes from "./routes/emergencyRoutes.js";
 import dbConnect from "./config/database.js";
 import config from "./config/config.js";
 
-// ------------------ Connect to MongoDB ------------------
+// Connect to MongoDB
 dbConnect();
 
 const app = express();
 
-
-// ------------------ CORS Setup ------------------
+// ✅ Dynamic CORS setup for Vercel + local development
 const allowedOrigins = [
-  "http://localhost:3000",
-  "https://muhafizdashboard.vercel.app",
+  "http://localhost:3000", // local dev frontend
+  "https://muhafizdashboard.vercel.app", // deployed Vercel frontend
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
+      // Allow requests with no origin (like Postman)
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        console.warn("Blocked CORS request from:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
@@ -42,24 +40,11 @@ app.use(
   })
 );
 
-// ------------------ Rate Limiting ------------------
-// Example: limit emergency alerts creation to 5 per minute per IP
-const emergencyLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 5,
-  message: {
-    success: false,
-    message: "Too many emergency requests from this IP. Try again later.",
-  },
-});
-
-app.use("/api/emergencies", emergencyLimiter);
-
-// ------------------ Body Parsing ------------------
+// Middleware to parse JSON and URL-encoded data
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// ------------------ Logging ------------------
+// Logging middleware
 app.use(morgan("dev"));
 
 // ------------------ Routes ------------------
@@ -71,21 +56,13 @@ app.use("/api/emergencies", emergencyRoutes);
 
 console.log("✅ All route files loaded");
 
-// ------------------ 404 Handler ------------------
-app.use((req, res) => {
-  res.status(404).json({ success: false, message: "Route not found" });
-});
-
-// ------------------ Global Error Handler ------------------
+// ------------------ Error handling ------------------
 app.use((err, req, res, next) => {
   console.error("⚠️ Error:", err.message);
-  res.status(500).json({
-    success: false,
-    message: err.message || "Internal Server Error",
-  });
+  res.status(500).json({ message: err.message || "Internal Server Error" });
 });
 
-// ------------------ Start Server ------------------
+// ------------------ Server start ------------------
 const PORT = config.port || 8080;
 const HOST = config.host || "0.0.0.0";
 
