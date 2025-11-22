@@ -4,7 +4,6 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 import cors from "cors";
 
-
 // Load environment variables
 dotenv.config();
 
@@ -26,7 +25,7 @@ const app = express();
 // ------------------ CORS Setup ------------------
 const allowedOrigins = [
   "http://localhost:3000", // local dev frontend
-  "https://muhafizdashboardproject.vercel.app/", // deployed frontend
+  "https://muhafizdashboardproject.vercel.app", // deployed frontend (no trailing slash)
 ];
 
 app.use(
@@ -34,7 +33,11 @@ app.use(
     origin: function (origin, callback) {
       console.log("Request Origin:", origin); // debug
       // Allow requests with no origin (Postman, curl)
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin) return callback(null, true);
+
+      // Check if the origin starts with any of the allowedOrigins
+      const isAllowed = allowedOrigins.some((o) => origin.startsWith(o));
+      if (isAllowed) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
@@ -48,7 +51,6 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(morgan("dev"));
-
 
 // ------------------ Routes ------------------
 app.use("/api/users", userRoutes);
