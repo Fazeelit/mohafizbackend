@@ -2,7 +2,7 @@ import express from "express";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import cors from "cors";
-import helmet from "helmet";
+
 
 dotenv.config();
 
@@ -44,7 +44,6 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(morgan("dev"));
-app.use(helmet());
 
 // Root route
 app.get("/", (req, res) => res.send("✅ Backend is running!"));
