@@ -2,7 +2,6 @@ import express from "express";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import cors from "cors";
-import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
 // Load environment variables
@@ -22,8 +21,6 @@ dbConnect();
 
 const app = express();
 
-// ------------------ Security Middleware ------------------
-app.use(helmet());
 
 // ------------------ CORS Setup ------------------
 const allowedOrigins = [
