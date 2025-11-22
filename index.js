@@ -1,11 +1,13 @@
-// server.js
 import express from "express";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import cors from "cors";
+import helmet from "helmet";
 
-// Load environment variables
 dotenv.config();
+
+import dbConnect from "./config/database.js";
+import config from "./config/config.js";
 
 import userRoutes from "./routes/usersroute.js";
 import adminRoutes from "./routes/adminroute.js";
@@ -13,46 +15,41 @@ import bookRoutes from "./routes/bookRoutes.js";
 import videoRoutes from "./routes/videoRoutes.js";
 import emergencyRoutes from "./routes/emergencyRoutes.js";
 
-import dbConnect from "./config/database.js";
-import config from "./config/config.js";
-
-// ------------------ Connect to MongoDB ------------------
+// Connect to MongoDB
 dbConnect();
 
-// ------------------ Initialize Express ------------------
 const app = express();
 
-// ------------------ CORS Setup ------------------
+// CORS setup
 const allowedOrigins = [
-  "http://localhost:3000", // local dev frontend
-  "https://muhafizdashboardproject.vercel.app", // deployed frontend (no trailing slash)
+  "http://localhost:3000",
+  "https://muhafizdashboardproject.vercel.app",
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      console.log("Request Origin:", origin); // debug
-      // Allow requests with no origin (Postman, curl)
-      if (!origin) return callback(null, true);
-
-      // Check if the origin starts with any of the allowedOrigins
-      const isAllowed = allowedOrigins.some((o) => origin.startsWith(o));
-      if (isAllowed) {
+      // allow requests with no origin (Postman)
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
       }
     },
-    credentials: true, // allow cookies/auth headers
+    credentials: true,
   })
 );
 
-// ------------------ Middleware ------------------
+// Middleware
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(morgan("dev"));
+app.use(helmet());
 
-// ------------------ Routes ------------------
+// Root route
+app.get("/", (req, res) => res.send("✅ Backend is running!"));
+
+// Routes
 app.use("/api/users", userRoutes);
 app.use("/api/admins", adminRoutes);
 app.use("/api/books", bookRoutes);
@@ -61,13 +58,13 @@ app.use("/api/emergencies", emergencyRoutes);
 
 console.log("✅ All route files loaded");
 
-// ------------------ Error Handling ------------------
+// Error handling
 app.use((err, req, res, next) => {
   console.error("⚠️ Error:", err.message);
   res.status(500).json({ message: err.message || "Internal Server Error" });
 });
 
-// ------------------ Start Server ------------------
+// Start server
 const PORT = config.port || 8080;
 const HOST = config.host || "0.0.0.0";
 
