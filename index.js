@@ -1,7 +1,9 @@
+// server.js
 import express from "express";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import cors from "cors";
+import helmet from "helmet";
 
 // Load environment variables
 dotenv.config();
@@ -15,37 +17,38 @@ import emergencyRoutes from "./routes/emergencyRoutes.js";
 import dbConnect from "./config/database.js";
 import config from "./config/config.js";
 
-// Connect to MongoDB
+// ------------------ Connect to MongoDB ------------------
 dbConnect();
 
+// ------------------ Initialize Express ------------------
 const app = express();
 
-// ✅ Dynamic CORS setup for Vercel + local development
+// ------------------ CORS Setup ------------------
 const allowedOrigins = [
   "http://localhost:3000", // local dev frontend
-  "https://muhafizdashboard.vercel.app/", // deployed Vercel frontend
+  "https://muhafizdashboard.vercel.app", // deployed frontend
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (like Postman)
+      console.log("Request Origin:", origin); // debug
+      // Allow requests with no origin (Postman, curl)
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
       }
     },
-    credentials: true,
+    credentials: true, // allow cookies/auth headers
   })
 );
 
-// Middleware to parse JSON and URL-encoded data
+// ------------------ Middleware ------------------
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-
-// Logging middleware
 app.use(morgan("dev"));
+app.use(helmet());
 
 // ------------------ Routes ------------------
 app.use("/api/users", userRoutes);
@@ -56,13 +59,13 @@ app.use("/api/emergencies", emergencyRoutes);
 
 console.log("✅ All route files loaded");
 
-// ------------------ Error handling ------------------
+// ------------------ Error Handling ------------------
 app.use((err, req, res, next) => {
   console.error("⚠️ Error:", err.message);
   res.status(500).json({ message: err.message || "Internal Server Error" });
 });
 
-// ------------------ Server start ------------------
+// ------------------ Start Server ------------------
 const PORT = config.port || 8080;
 const HOST = config.host || "0.0.0.0";
 
