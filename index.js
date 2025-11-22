@@ -26,7 +26,7 @@ const app = express();
 // ------------------ CORS Setup ------------------
 const allowedOrigins = [
   "http://localhost:3000", // local dev frontend
-  "https://muhafizdashboard.vercel.app/", // deployed frontend
+  "https://muhafizdashboardproject.vercel.app/", // deployed frontend
 ];
 
 app.use(
