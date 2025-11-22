@@ -23,7 +23,7 @@ const app = express();
 // ✅ Dynamic CORS setup for Vercel + local development
 const allowedOrigins = [
   "http://localhost:3000", // local dev frontend
-  "https://muhafizdashboard.vercel.app", // deployed Vercel frontend
+  "https://muhafizdashboard.vercel.app/", // deployed Vercel frontend
 ];
 
 app.use(
