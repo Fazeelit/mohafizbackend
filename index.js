@@ -14,6 +14,7 @@ import adminRoutes from "./routes/adminroute.js";
 import bookRoutes from "./routes/bookRoutes.js";
 import videoRoutes from "./routes/videoRoutes.js";
 import emergencyRoutes from "./routes/emergencyRoutes.js";
+import bookingRoutes from "./routes/bookingRoutes.js";
 
 // Connect to MongoDB
 dbConnect();
@@ -54,6 +55,7 @@ app.use("/api/admins", adminRoutes);
 app.use("/api/books", bookRoutes);
 app.use("/api/videos", videoRoutes);
 app.use("/api/emergencies", emergencyRoutes);
+app.use("/api/bookings", bookingRoutes);
 
 console.log("✅ All route files loaded");
 
