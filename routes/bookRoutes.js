@@ -29,7 +29,7 @@ router.get("/:id", validateId, getBookById);
 
 // Create new book
 // Frontend should send file as "file"
-router.post("/uploadBook", uploadFile("file"), verifyToken, verifyAdmin, uploadBook);
+router.post("/uploadBook", uploadFile("file"), verifyToken,uploadBook);
 
 // Update book details
 router.put("/:id", uploadFile("uploadedFileUrl"), verifyToken, verifyAdmin, validateId, updateBook);
