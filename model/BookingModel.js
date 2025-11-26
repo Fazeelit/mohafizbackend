@@ -30,7 +30,7 @@ const bookingSchema = new mongoose.Schema(
     qualification: {
       type: String,
       required: true,
-      enum: ["matric", "FA", "BA", "MA", "MS", "Phd"],
+      
     },
     service: {
       type: String,
