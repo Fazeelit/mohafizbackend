@@ -35,7 +35,7 @@ const bookingSchema = new mongoose.Schema(
     service: {
       type: String,
       required: true,
-      enum: ["Child Counseling", "Emergency Helpline", "Awareness Workshop", "On-Site Support"],
+      
     },
     address: {
       type: String,
