@@ -9,7 +9,7 @@ const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 //
 const getAllBooks = async (req, res) => {
   try {
-    const books = await Book.find().sort({ createdAt: -1 });
+    const books = await Book.find();
     if (!books.length) {
       return res.status(404).json({ message: "No books found" });
     }
