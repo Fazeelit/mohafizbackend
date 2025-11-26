@@ -19,7 +19,7 @@ const createBooking = async (req, res) => {
       tehsil,
     } = req.body;
 
-    // Validate Required Fields
+    // Validate required fields
     if (
       !name ||
       !fname ||
@@ -37,35 +37,37 @@ const createBooking = async (req, res) => {
       return res.status(400).json({ message: "All fields are required." });
     }
 
-    // Clean CNIC/Phone before checking DB
-    const cleanCNIC = cnic.replace(/-/g, "");
-    const cleanPhone = phone.replace(/-/g, "");
-    const cleanWhatsapp = whatsapp.replace(/-/g, "");
+    // Clean CNIC and phone numbers
+    const cleanCNIC = cnic.replace(/-/g, "").trim();
+    const cleanPhone = phone.replace(/-/g, "").trim();
+    const cleanWhatsapp = whatsapp.replace(/-/g, "").trim();
 
     // Check duplicate CNIC
     const existingBooking = await Booking.findOne({ cnic: cleanCNIC });
     if (existingBooking) {
-      return res.status(400).json({
-        message: "A booking with this CNIC already exists.",
-      });
+      return res
+        .status(400)
+        .json({ message: "A booking with this CNIC already exists." });
     }
 
-    // Create new booking
-    const booking = new Booking({
-      name,
-      fname,
+    // Prepare booking data
+    const bookingData = {
+      name: name.trim(),
+      fname: fname.trim(),
       cnic: cleanCNIC,
       phone: cleanPhone,
       whatsapp: cleanWhatsapp,
-      qualification,
-      service,
-      address,
-      province,
-      division,
-      district,
-      tehsil,
-    });
+      qualification: qualification.trim(),
+      service: service.trim(),
+      address: address.trim(),
+      province: province.trim(),
+      division: division.trim(),
+      district: district.trim(),
+      tehsil: tehsil.trim(),
+    };
 
+    // Create new booking
+    const booking = new Booking(bookingData);
     await booking.save();
 
     res.status(201).json({
