@@ -4,12 +4,12 @@ import mongoose from "mongoose";
 // Helper: Validate MongoDB ObjectId
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
-//
+//z
 // ✅ Get all books
 //
 const getAllBooks = async (req, res) => {
   try {
-    const books = await Book.find();
+    const books = await Book.find().sort({ createdAt: -1 });
     if (!books.length) {
       return res.status(404).json({ message: "No books found" });
     }
