@@ -49,12 +49,8 @@ const reportSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    files: [
-      {
-        url: { type: String }, // store uploaded file URL or path
-        filename: { type: String },
-      },
-    ],
+    files: { 
+      type: String },
     status: {
       type: String,
       enum: ["Pending", "In Progress", "Resolved"],
