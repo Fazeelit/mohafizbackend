@@ -15,10 +15,10 @@ const createReport = async (req, res) => {
       address,
       district,
       description,
-      files, // optional
+      files
     } = req.body;
 
-    if (!complaintType || !address || !district || !description) {
+    if (!complaintType ||!victimName ||!victimAge|| !address || !district || !description) {
       return res.status(400).json({ message: "Required fields missing" });
     }
 
