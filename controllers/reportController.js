@@ -33,7 +33,7 @@ const createReport = async (req, res) => {
       address,
       district,
       description,
-      files: files || [],
+      files: req.imageUrl,
     });
 
     await newReport.save();

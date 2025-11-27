@@ -6,11 +6,12 @@ import {
   getReportById,
   deleteReport,
 } from "../controllers/reportController.js";
+import uploadImage from "../utill/uploadimage.js";
 
 const router = express.Router();
 
 // @desc    Create a new report
-router.post("/createReport", createReport);
+router.post("/createReport",uploadImage("files"), createReport);
 
 // @desc    Get all reports
 router.get("/", getReports);
