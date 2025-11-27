@@ -15,6 +15,9 @@ import bookRoutes from "./routes/bookRoutes.js";
 import videoRoutes from "./routes/videoRoutes.js";
 import emergencyRoutes from "./routes/emergencyRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
+import reportRoutes from "./routes/reportRoutes.js";
+import newsRoutes from "./routes/newsRoutes.js";
+import helplinRoutes from "./routes/helplineRoutes.js"
 
 // Connect to MongoDB
 dbConnect();
@@ -56,6 +59,9 @@ app.use("/api/books", bookRoutes);
 app.use("/api/videos", videoRoutes);
 app.use("/api/emergencies", emergencyRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/reports", reportRoutes);
+app.use("/api/news", newsRoutes);
+app.use("/api/helpline", helplinRoutes);
 
 console.log("✅ All route files loaded");
 
