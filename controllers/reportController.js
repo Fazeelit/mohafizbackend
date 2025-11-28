@@ -76,7 +76,7 @@ const getReportById = async (req, res) => {
 };
 
 
-import Report from "../model/ReportModel.js";
+//Update Report
 
 export const updateReport = async (req, res) => {
   try {
