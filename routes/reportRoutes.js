@@ -21,7 +21,7 @@ router.get("/",verifyToken, getReports);
 // @desc    Get a single report by ID
 router.get("/:id",verifyToken,verifyAdmin, getReportById);
 // @desc    Get a single report by ID
-router.get("/updateReport/:id",verifyToken,verifyAdmin, updateReport);
+router.put("/updateReport/:id",verifyToken,verifyAdmin, updateReport);
 
 // @desc    Delete a report by ID
 router.delete("/deleteReport/:id",verifyToken,verifyAdmin, deleteReport);
