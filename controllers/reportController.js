@@ -78,7 +78,7 @@ const getReportById = async (req, res) => {
 
 //Update Report
 
-export const updateReport = async (req, res) => {
+const updateReport = async (req, res) => {
   try {
     const reportId = req.params.id;
     const updatedData = req.body;
