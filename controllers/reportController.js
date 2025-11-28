@@ -76,44 +76,28 @@ const getReportById = async (req, res) => {
 };
 
 
-// ---------------- UPDATE REPORT ----------------
-const updateReport = async (req, res) => {
-  try {
-    const { id } = req.params;
-    let updateData = req.body;  
+import Report from "../model/ReportModel.js";
 
-    // Check if report exists
-    const existingReport = await Report.findById(id);
-    if (!existingReport) {
+export const updateReport = async (req, res) => {
+  try {
+    const reportId = req.params.id;
+    const updatedData = req.body;
+
+    const report = await Report.findByIdAndUpdate(reportId, updatedData, {
+      new: true,
+    });
+
+    if (!report) {
       return res.status(404).json({ message: "Report not found" });
     }
 
-    // Handle anonymous logic
-    if (updateData.anonymous === true || updateData.anonymous === "true") {
-      updateData.name = "";
-      updateData.phone = "";
-      updateData.email = "";
-      updateData.anonymous = true;
-    }
-
-    // Update the report
-    const updatedReport = await Report.findByIdAndUpdate(
-      id,
-      { $set: updateData },
-      { new: true, runValidators: true }
-    );
-
-    res.status(200).json({
-      success: true,
-      message: "Report updated successfully",
-      report: updatedReport
-    });
-
+    res.status(200).json(report);
   } catch (error) {
-    console.error("Update Report Error:", error);
-    res.status(500).json({ message: "Server error" });
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
   }
 };
+
 
 
 // ---------------- DELETE REPORT ----------------
