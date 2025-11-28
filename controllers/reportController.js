@@ -80,8 +80,9 @@ const getReportById = async (req, res) => {
 const updateReport = async (req, res) => {
   try {
     const { id } = req.params;
-    let updateData = req.body;
+    let updateData = req.body;  
 
+    // Check if report exists
     const existingReport = await Report.findById(id);
     if (!existingReport) {
       return res.status(404).json({ message: "Report not found" });
@@ -95,24 +96,21 @@ const updateReport = async (req, res) => {
       updateData.anonymous = true;
     }
 
-    // // If new image uploaded
-    // if (req.imageUrl) {
-    //   updateData.files = req.imageUrl;
-    // }
-
+    // Update the report
     const updatedReport = await Report.findByIdAndUpdate(
       id,
       { $set: updateData },
-      { new: true }
+      { new: true, runValidators: true }
     );
 
     res.status(200).json({
+      success: true,
       message: "Report updated successfully",
       report: updatedReport
     });
 
   } catch (error) {
-    console.error("Error updating report:", error);
+    console.error("Update Report Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
