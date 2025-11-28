@@ -95,10 +95,10 @@ const updateReport = async (req, res) => {
       updateData.anonymous = true;
     }
 
-    // If new image uploaded
-    if (req.imageUrl) {
-      updateData.files = req.imageUrl;
-    }
+    // // If new image uploaded
+    // if (req.imageUrl) {
+    //   updateData.files = req.imageUrl;
+    // }
 
     const updatedReport = await Report.findByIdAndUpdate(
       id,
