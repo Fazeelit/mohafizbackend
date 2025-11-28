@@ -1,5 +1,5 @@
 // controllers/reportController.js
-import Report from "../model/ReportModel.js"
+import Report from "../model/ReportModel.js";
 
 // ---------------- CREATE REPORT ----------------
 const createReport = async (req, res) => {
@@ -18,7 +18,7 @@ const createReport = async (req, res) => {
       files
     } = req.body;
 
-    if (!complaintType ||!victimName ||!victimAge|| !address || !district || !description) {
+    if (!complaintType || !victimName || !victimAge || !address || !district || !description) {
       return res.status(400).json({ message: "Required fields missing" });
     }
 
@@ -45,6 +45,7 @@ const createReport = async (req, res) => {
   }
 };
 
+
 // ---------------- GET ALL REPORTS ----------------
 const getReports = async (req, res) => {
   try {
@@ -55,6 +56,7 @@ const getReports = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 // ---------------- GET REPORT BY ID ----------------
 const getReportById = async (req, res) => {
@@ -72,6 +74,49 @@ const getReportById = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+// ---------------- UPDATE REPORT ----------------
+const updateReport = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let updateData = req.body;
+
+    const existingReport = await Report.findById(id);
+    if (!existingReport) {
+      return res.status(404).json({ message: "Report not found" });
+    }
+
+    // Handle anonymous logic
+    if (updateData.anonymous === true || updateData.anonymous === "true") {
+      updateData.name = "";
+      updateData.phone = "";
+      updateData.email = "";
+      updateData.anonymous = true;
+    }
+
+    // If new image uploaded
+    if (req.imageUrl) {
+      updateData.files = req.imageUrl;
+    }
+
+    const updatedReport = await Report.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "Report updated successfully",
+      report: updatedReport
+    });
+
+  } catch (error) {
+    console.error("Error updating report:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 
 // ---------------- DELETE REPORT ----------------
 const deleteReport = async (req, res) => {
@@ -92,5 +137,6 @@ const deleteReport = async (req, res) => {
   }
 };
 
+
 // ---------------- EXPORT ALL ----------------
-export { createReport, getReports, getReportById, deleteReport };
+export { createReport, getReports, getReportById, updateReport, deleteReport };

@@ -4,6 +4,7 @@ import {
   createReport,
   getReports,
   getReportById,
+  updateReport,
   deleteReport,
 } from "../controllers/reportController.js";
 import uploadImage from "../utill/uploadimage.js";
@@ -19,6 +20,8 @@ router.get("/",verifyToken, getReports);
 
 // @desc    Get a single report by ID
 router.get("/:id",verifyToken,verifyAdmin, getReportById);
+// @desc    Get a single report by ID
+router.get("/updateReport/:id",verifyToken,verifyAdmin, updateReport);
 
 // @desc    Delete a report by ID
 router.delete("/deleteReport/:id",verifyToken,verifyAdmin, deleteReport);
