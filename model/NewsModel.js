@@ -35,7 +35,7 @@ const NewsItemSchema = new mongoose.Schema(
     image: {
       type: String,
       trim: true,
-    }
+    },
   },
   {
     timestamps: true, // adds createdAt & updatedAt
@@ -43,7 +43,8 @@ const NewsItemSchema = new mongoose.Schema(
 );
 
 // Create the model
-const NewsItem =mongoose.model("NewsItem", NewsItemSchema);
+const NewsItem =
+  mongoose.models.NewsItem || mongoose.model("NewsItem", NewsItemSchema);
 
 // Export the model
 export default NewsItem;
