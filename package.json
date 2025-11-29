@@ -1,13 +1,9 @@
 {
   "name": "mohafiz",
   "version": "0.1.0",
-  "description": "MERN stack backend for Mohafiz project",
   "main": "index.js",
   "type": "module",
   "private": true,
-  "engines": {
-    "node": ">=18.0.0"
-  },
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js"
@@ -24,19 +20,10 @@
     "mongoose": "^8.19.4",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
-    "multer-gridfs-storage": "^5.0.2",
+    "multer-gridfs-storage": "^1.3.0",
     "streamifier": "^0.1.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.11"
-  },
-  "keywords": [
-    "MERN",
-    "Express",
-    "MongoDB",
-    "Cloudinary",
-    "Backend"
-  ],
-  "author": "Fazeel Ahmed",
-  "license": "ISC"
+    "nodemon": "^3.1.10"
+  }
 }
