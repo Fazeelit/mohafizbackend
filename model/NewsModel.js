@@ -27,10 +27,14 @@ const NewsItemSchema = new mongoose.Schema(
       required: true,
       default: Date.now,
     },
-    description: {
+    published: {
       type: String,
       required: true,
-      trim: true,
+     enum: [
+        "Yes",
+        "No",       
+      ],
+      default: "No",
     },
     image: {
       type: String,
