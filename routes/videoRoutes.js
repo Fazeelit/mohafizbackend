@@ -9,7 +9,7 @@ import {
 
 import verifyToken, { verifyAdmin } from "../middleware/auth.js";
 import validateId from "../middleware/validateId.js";
-import uploadVideofile from "../utill/uploadVideo.js";
+import uploadVideofile from "../util/uploadVideo.js";
 
 const router = express.Router();
 

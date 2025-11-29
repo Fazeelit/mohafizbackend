@@ -10,7 +10,7 @@ import {
 
 import validateId from "../middleware/validateId.js";
 import verifyToken, { verifyAdmin } from "../middleware/auth.js";
-import uploadFile from "../utill/uploadFile.js";
+import uploadFile from "../util/uploadFile.js";
 
 const router = express.Router();
 
