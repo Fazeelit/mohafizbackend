@@ -12,8 +12,8 @@ import verifyToken, { verifyAdmin } from "../middleware/auth.js";
 const router = express.Router();
 
 // Public routes
-router.get("/", getAllNews);
-router.get("/:id", validateId, getNewsById);
+router.get("/",verifyToken, verifyAdmin, getAllNews);
+router.get("/:id", validateId,verifyToken, verifyAdmin, getNewsById);
 
 // Protected routes (Admin only)
 router.post("/createNews", verifyToken, verifyAdmin, createNews);
