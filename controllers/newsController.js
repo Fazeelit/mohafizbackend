@@ -3,15 +3,13 @@ import NewsItem from "../model/NewsModel.js";
 // Create a new news item
 export const createNews = async (req, res) => {
   try {
-    const { title, category, date, description, icon, color, link } = req.body;
+    const { title, category, date, description,image } = req.body;
     const news = new NewsItem({
       title,
       category,
       date,
       description,
-      icon,
-      color,
-      link,
+      image:req.imageUrl,      
     });
     const savedNews = await news.save();
     res.status(201).json({ success: true, data: savedNews });

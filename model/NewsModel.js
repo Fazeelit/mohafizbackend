@@ -32,18 +32,10 @@ const NewsItemSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    icon: {
-      type: String, // Name of lucide-react icon, e.g., "Calendar"
-      default: "FileText",
-    },
-    color: {
-      type: String, // Hex color code, e.g., "#4F46E5"
-      default: "#3B82F6",
-    },
-    link: {
-      type: String, // Optional URL
-      default: "#",
-    },
+    image:{
+      type:String,
+      trim:true
+    }
   },
   {
     timestamps: true, // adds createdAt & updatedAt
@@ -51,7 +43,7 @@ const NewsItemSchema = new mongoose.Schema(
 );
 
 // Create the model
-const NewsItem = mongoose.models.NewsItem || mongoose.model("NewsItem", NewsItemSchema);
+const NewsItem =mongoose.model("NewsItem", NewsItemSchema);
 
 // Export the model
 export default NewsItem;

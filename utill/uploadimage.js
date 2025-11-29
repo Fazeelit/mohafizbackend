@@ -48,7 +48,7 @@ const uploadImage = (fieldName = "file") => {
         });
 
         // Attach Cloudinary URL to req
-        req.imageUrl = result.secure_url;
+        req.image = result.secure_url;
 
         // Delete local temporary file
         fs.unlinkSync(filePath);
