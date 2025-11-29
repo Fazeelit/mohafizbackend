@@ -9,7 +9,7 @@ export const createNews = async (req, res) => {
       category,
       date,
       description,
-      image:req.imageUrl,      
+      image: req.fileUrl,      
     });
     const savedNews = await news.save();
     res.status(201).json({ success: true, data: savedNews });

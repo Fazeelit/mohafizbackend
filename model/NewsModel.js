@@ -32,9 +32,9 @@ const NewsItemSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    image:{
-      type:String,
-      trim:true
+    image: {
+      type: String,
+      trim: true,
     }
   },
   {

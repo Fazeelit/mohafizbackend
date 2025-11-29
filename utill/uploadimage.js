@@ -20,7 +20,7 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // optional: limit to 5MB
 });
 
-const uploadImage = (fieldName = "file") => {
+const uploadFile = (fieldName = "file") => {
   return (req, res, next) => {
     upload.single(fieldName)(req, res, async (err) => {
       if (err) {
@@ -48,7 +48,7 @@ const uploadImage = (fieldName = "file") => {
         });
 
         // Attach Cloudinary URL to req
-        req.image = result.secure_url;
+        req.fileUrl = result.secure_url;
 
         // Delete local temporary file
         fs.unlinkSync(filePath);
@@ -62,4 +62,4 @@ const uploadImage = (fieldName = "file") => {
   };
 };
 
-export default uploadImage;
+export default uploadFile;
