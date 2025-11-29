@@ -7,7 +7,8 @@ export const createNews = async (req, res) => {
     const news = new NewsItem({
       title,
       category,
-      date,
+      description,
+      date,      
       published,
       image: req.fileUrl,      
     });

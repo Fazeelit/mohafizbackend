@@ -22,11 +22,16 @@ const NewsItemSchema = new mongoose.Schema(
       ],
       default: "all",
     },
+    description: {
+      type: String,
+      required: true,
+    },
     date: {
       type: Date,
       required: true,
       default: Date.now,
     },
+    
     published: {
       type: String,
       required: true,
