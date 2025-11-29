@@ -13,7 +13,7 @@ import uploadImage from "../util/uploadImage.js";
 const router = express.Router();
 
 // Public routes
-router.get("/",verifyToken, verifyAdmin, getAllNews);
+router.get("/",verifyToken, getAllNews);
 router.get("/:id", validateId,verifyToken, verifyAdmin, getNewsById);
 
 // Protected routes (Admin only)
