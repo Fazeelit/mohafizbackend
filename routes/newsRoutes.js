@@ -8,7 +8,7 @@ import {
 } from "../controllers/newsController.js"; // explicit import
 import validateId from "../middleware/validateId.js";
 import verifyToken, { verifyAdmin } from "../middleware/auth.js";
-import uploadImage from "../utill/uploadImage.js";
+import uploadImage from "../util/uploadImage.js";
 
 const router = express.Router();
 

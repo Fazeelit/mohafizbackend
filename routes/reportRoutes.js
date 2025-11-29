@@ -7,7 +7,7 @@ import {
   updateReport,
   deleteReport,
 } from "../controllers/reportController.js";
-import uploadImage from "../utill/uploadImage.js";
+import uploadImage from "../util/uploadImage.js";
 import verifyToken, { verifyAdmin } from "../middleware/auth.js";
 
 const router = express.Router();
