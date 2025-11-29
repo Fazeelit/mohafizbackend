@@ -3,7 +3,7 @@ import NewsItem from "../model/NewsModel.js";
 // Create a new news item
 export const createNews = async (req, res) => {
   try {
-    const { title, category, date, published,image } = req.body;
+    const { title, category,description, date, published,image } = req.body;
     const news = new NewsItem({
       title,
       category,
