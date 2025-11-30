@@ -46,22 +46,42 @@ export const getNewsById = async (req, res) => {
   }
 };
 
-// Update a news item by ID
+// ---------------- UPDATE NEWS ----------------
 export const updateNews = async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedNews = await NewsItem.findByIdAndUpdate(
-      id,
-      { $set: req.body },
-      { new: true, runValidators: true }
-    );
-    if (!updatedNews) {
-      return res.status(404).json({ success: false, message: "News not found" });
+    const { title, category, description, image } = req.body;
+
+    if (!title || !category || !description) {
+      return res.status(400).json({ success: false, message: "All fields are required." });
     }
-    res.status(200).json({ success: true, data: updatedNews });
-  } catch (error) {
-    console.error("Update News Error:", error);
-    res.status(500).json({ success: false, message: error.message });
+
+    // Find existing news
+    const news = await NewsItem.findById(id);
+    if (!news) return res.status(404).json({ success: false, message: "News not found." });
+
+    let imageUrl = news.image; // default existing image
+
+    // If a new image Base64 is provided, upload to Cloudinary
+    if (image && image.startsWith("data:image")) {
+      const uploadResult = await cloudinary.uploader.upload(image, {
+        folder: "news",
+      });
+      imageUrl = uploadResult.secure_url;
+    }
+
+    // Update news
+    news.title = title;
+    news.category = category;
+    news.description = description;
+    news.image = imageUrl;
+
+    await news.save();
+
+    return res.status(200).json({ success: true, message: "News updated successfully", data: news });
+  } catch (err) {
+    console.error("Update News Error:", err);
+    return res.status(500).json({ success: false, message: "Failed to update news." });
   }
 };
 
