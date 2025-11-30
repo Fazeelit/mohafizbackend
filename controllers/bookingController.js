@@ -114,81 +114,34 @@ const getBookingById = async (req, res) => {
   }
 };
 
-// ---------------- UPDATE BOOKING ----------------
 const updateBooking = async (req, res) => {
   try {
     const { id } = req.params;
-    const {
-      name,
-      fname,
-      cnic,
-      phone,
-      whatsapp,
-      qualification,
-      service,
-      address,
-      province,
-      division,
-      district,
-      tehsil,
-      status,
-    } = req.body;
 
-    // Validate required fields
-    if (
-      !name ||
-      !fname ||
-      !cnic ||
-      !phone ||
-      !whatsapp ||
-      !qualification ||
-      !service ||
-      !address ||
-      !province ||
-      !division ||
-      !district ||
-      !tehsil
-    ) {
-      return res.status(400).json({ success: false, message: "All required fields must be provided." });
+    // Check if ID is valid
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid ID" });
     }
 
-    // Validate status enum
-    const validStatus = ["Pending", "Completed"];
-    const bookingStatus = validStatus.includes(status) ? status : "Pending";
-
-    // Build update object
-    const updatedData = {
-      name,
-      fname,
-      cnic,
-      phone,
-      whatsapp,
-      qualification,
-      service,
-      address,
-      province,
-      division,
-      district,
-      tehsil,
-      status: bookingStatus, // status will be Pending if invalid or not provided
-    };
-
-    // Update booking by ID
-    const updatedBooking = await Booking.findByIdAndUpdate(id, updatedData, {
-      new: true, // return the updated document
-      runValidators: true, // ensure schema validators are applied
-    });
+    // Update booking
+    const updatedBooking = await Booking.findByIdAndUpdate(
+      id,
+      req.body, // body can contain only status or other fields if needed
+      { new: true, runValidators: true }
+    );
 
     if (!updatedBooking) {
-      return res.status(404).json({ success: false, message: "Booking not found." });
+      return res.status(404).json({ success: false, message: "Booking not found" });
     }
 
-    res.status(200).json({ success: true, message: "Booking updated successfully", data: updatedBooking });
+    res.status(200).json({ success: true, data: updatedBooking });
   } catch (error) {
     console.error("Update Booking Error:", error);
-    res.status(500).json({ success: false, message: "Server error. Failed to update booking." });
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
+
 // ---------------- DELETE BOOKING ----------------
 const deleteBooking = async (req, res) => {
   try {
