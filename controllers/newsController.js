@@ -46,24 +46,44 @@ export const getNewsById = async (req, res) => {
   }
 };
 
-// Update a news item by ID
+// ---------------- UPDATE NEWS ----------------
 export const updateNews = async (req, res) => {
   try {
     const { id } = req.params;
+    const { title, category, description } = req.body;
+
+    // Check required fields
+    if (!title || !category || !description) {
+      return res.status(400).json({ success: false, message: "Title, category, and description are required." });
+    }
+
+    // Build updated object
+    const updatedData = {
+      title,
+      category,
+      description,
+    };
+
+    // If file was uploaded via uploadImage middleware
+    if (req.fileUrl) {
+      updatedData.image = req.fileUrl; // same as newReport.files = req.imageUrl
+    }
+
     const updatedNews = await NewsItem.findByIdAndUpdate(
       id,
-      { $set: req.body },
+      { $set: updatedData },
       { new: true, runValidators: true }
     );
+
     if (!updatedNews) {
       return res.status(404).json({ success: false, message: "News not found" });
     }
+
     res.status(200).json({ success: true, data: updatedNews });
   } catch (error) {
     console.error("Update News Error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
-};
 
 // Delete a news item by ID
 export const deleteNews = async (req, res) => {
