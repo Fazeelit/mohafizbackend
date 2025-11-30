@@ -50,7 +50,7 @@ export const getNewsById = async (req, res) => {
 export const updateNews = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, category, description } = req.body;
+    const { title, category, description, date, published } = req.body;
 
     // Check required fields
     if (!title || !category || !description) {
@@ -62,11 +62,13 @@ export const updateNews = async (req, res) => {
       title,
       category,
       description,
+      date,
+      published,
     };
 
-    // If file was uploaded via uploadImage middleware
+    // Only set image if a new file was uploaded
     if (req.fileUrl) {
-      updatedData.image = req.fileUrl; // same as newReport.files = req.imageUrl
+      updatedData.image = req.fileUrl;
     }
 
     const updatedNews = await NewsItem.findByIdAndUpdate(
@@ -85,6 +87,7 @@ export const updateNews = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 // Delete a news item by ID
 export const deleteNews = async (req, res) => {
