@@ -84,6 +84,7 @@ export const updateNews = async (req, res) => {
     console.error("Update News Error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
+};
 
 // Delete a news item by ID
 export const deleteNews = async (req, res) => {
