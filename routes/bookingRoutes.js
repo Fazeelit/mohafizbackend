@@ -3,7 +3,8 @@ import express from "express";
 import {
   createBooking,
   getAllBookings,
-  getBookingById,  
+  getBookingById,
+  updateBooking,  
   deleteBooking,
 } from "../controllers/bookingController.js";
 
@@ -19,6 +20,9 @@ router.get("/", verifyToken, verifyAdmin, getAllBookings);
 
 // Get booking by ID: user can get their own, admin can get any
 router.get("/:id", verifyToken, getBookingById);
+
+//update booking
+router.delete("/updateBooking,/:id", verifyToken, verifyAdmin, updateBooking,);
 
 // Admin only: delete booking
 router.delete("/deleteBooking/:id", verifyToken, verifyAdmin, deleteBooking);
