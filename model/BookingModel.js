@@ -30,12 +30,10 @@ const bookingSchema = new mongoose.Schema(
     qualification: {
       type: String,
       required: true,
-      
     },
     service: {
       type: String,
       required: true,
-      
     },
     address: {
       type: String,
@@ -57,15 +55,17 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
+    // -------- FIXED ENUM --------
     status: {
       type: String,
-      enum: ["Pending", "Completed"],
+      enum: ["Pending", "Selected", "Completed"],
       default: "Pending",
     },
   },
   { timestamps: true }
 );
 
-const Booking=mongoose.model("Booking", bookingSchema);
+const Booking = mongoose.model("Booking", bookingSchema);
 
-export default Booking
+export default Booking;
