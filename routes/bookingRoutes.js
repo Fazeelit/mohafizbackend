@@ -22,7 +22,7 @@ router.get("/", verifyToken, verifyAdmin, getAllBookings);
 router.get("/:id", verifyToken, getBookingById);
 
 //update booking
-router.delete("/updateBooking,/:id", verifyToken, verifyAdmin, updateBooking,);
+router.put("/updateBooking,/:id", verifyToken, verifyAdmin, updateBooking,);
 
 // Admin only: delete booking
 router.delete("/deleteBooking/:id", verifyToken, verifyAdmin, deleteBooking);
