@@ -1,5 +1,6 @@
 // controllers/bookingController.js
 import Booking from "../model/BookingModel.js";
+import mongoose from "mongoose";
 
 // ---------------- CREATE BOOKING ----------------
 const createBooking = async (req, res) => {
