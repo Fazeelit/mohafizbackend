@@ -14,7 +14,7 @@ const router = express.Router();
 
 // Public routes
 router.get("/", getAllNews);
-router.get("/:id", validateId,verifyToken, verifyAdmin, getNewsById);
+router.get("/:id", validateId,getNewsById);
 
 // Protected routes (Admin only)
 router.post("/createNews", verifyToken, verifyAdmin,uploadImage("image"), createNews);
