@@ -20,7 +20,6 @@ const createBooking = async (req, res) => {
       tehsil,
     } = req.body;
 
-    // Validate required fields
     if (
       !name ||
       !fname ||
@@ -38,12 +37,10 @@ const createBooking = async (req, res) => {
       return res.status(400).json({ message: "All fields are required." });
     }
 
-    // Clean CNIC and phone numbers
     const cleanCNIC = cnic.replace(/-/g, "").trim();
     const cleanPhone = phone.replace(/-/g, "").trim();
     const cleanWhatsapp = whatsapp.replace(/-/g, "").trim();
 
-    // Check duplicate CNIC
     const existingBooking = await Booking.findOne({ cnic: cleanCNIC });
     if (existingBooking) {
       return res
@@ -51,7 +48,6 @@ const createBooking = async (req, res) => {
         .json({ message: "A booking with this CNIC already exists." });
     }
 
-    // Prepare booking data
     const bookingData = {
       name: name.trim(),
       fname: fname.trim(),
@@ -67,7 +63,6 @@ const createBooking = async (req, res) => {
       tehsil: tehsil.trim(),
     };
 
-    // Create new booking
     const booking = new Booking(bookingData);
     await booking.save();
 
@@ -115,19 +110,27 @@ const getBookingById = async (req, res) => {
   }
 };
 
+// ---------------- UPDATE BOOKING ----------------
 const updateBooking = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check if ID is valid
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ success: false, message: "Invalid ID" });
     }
 
-    // Update booking
+    // Fix status to match ENUM
+    if (req.body.status) {
+      const status = req.body.status.toLowerCase();
+
+      if (status === "pending") req.body.status = "Pending";
+      else if (status === "selected") req.body.status = "Completed"; // OR add Selected to enum
+      else if (status === "completed") req.body.status = "Completed";
+    }
+
     const updatedBooking = await Booking.findByIdAndUpdate(
       id,
-      req.body, // body can contain only status or other fields if needed
+      req.body,
       { new: true, runValidators: true }
     );
 
@@ -136,12 +139,12 @@ const updateBooking = async (req, res) => {
     }
 
     res.status(200).json({ success: true, data: updatedBooking });
+
   } catch (error) {
     console.error("Update Booking Error:", error);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
-
 
 // ---------------- DELETE BOOKING ----------------
 const deleteBooking = async (req, res) => {
@@ -170,5 +173,5 @@ export {
   getAllBookings,
   getBookingById,
   updateBooking,
-  deleteBooking,
+  deleteBooking
 };
