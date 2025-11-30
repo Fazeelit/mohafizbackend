@@ -118,16 +118,7 @@ const updateBooking = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ success: false, message: "Invalid ID" });
     }
-
-    // Fix status to match ENUM
-    if (req.body.status) {
-      const status = req.body.status.toLowerCase();
-
-      if (status === "pending") req.body.status = "Pending";
-      else if (status === "selected") req.body.status = "Completed"; // OR add Selected to enum
-      else if (status === "completed") req.body.status = "Completed";
-    }
-
+    
     const updatedBooking = await Booking.findByIdAndUpdate(
       id,
       req.body,
