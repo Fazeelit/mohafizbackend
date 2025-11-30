@@ -19,7 +19,7 @@ router.get("/:id", validateId,getNewsById);
 // Protected routes (Admin only)
 router.post("/createNews", verifyToken, verifyAdmin,uploadImage("image"), createNews);
 // Route
-router.put("/updateNews/:id", verifyAdmin, validateId, updateNews);
+router.put("/updateNews/:id", verifyAdmin, validateId,uploadImage("image"), updateNews);
 
 router.delete("/deleteNews/:id", verifyToken, verifyAdmin, validateId, deleteNews);
 
