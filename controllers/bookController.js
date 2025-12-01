@@ -146,55 +146,29 @@ const deleteBook = async (req, res) => {
   }
 };
 
-//
+
 // ✅ Simulated download route (Public)
-//
 const downloadBook = async (req, res) => {
-  const { id } = req.params;
-
-  if (!isValidObjectId(id)) {
-    return res.status(400).json({ message: "Invalid book ID" });
-  }
-
   try {
-    const book = await Book.findById(id);
-    if (!book) {
-      return res.status(404).json({ message: "Book not found" });
-    }
+    const { id } = req.params;
 
-    // Increment download count
+    const book = await Book.findById(id);
+    if (!book) return res.status(404).json({ message: "Book not found" });
+
     await book.incrementDownloads();
 
-    // Generate RAW PDF URL from Cloudinary
     const pdfUrl = cloudinary.url(book.filePublicId, {
       resource_type: "raw",
-      format: "pdf",
-      secure: true,
+      secure: true
     });
 
-    // Force browser PDF download
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${book.title}.pdf"`
-    );
-
-    // Stream PDF from Cloudinary to frontend
-    const cloudinaryStream = await axios({
-      url: pdfUrl,
-      method: "GET",
-      responseType: "stream",
-    });
-
-    cloudinaryStream.data.pipe(res);
+    res.redirect(pdfUrl + "?download=1");
   } catch (error) {
-    console.error("PDF download error:", error);
-    res.status(500).json({
-      message: "Failed to download PDF",
-      error: error.message,
-    });
+    console.error(error);
+    res.status(500).json({ message: "Failed to download PDF" });
   }
 };
+
 
 export {
   getAllBooks,
