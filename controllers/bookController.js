@@ -152,6 +152,9 @@ const downloadBook = async (req, res) => {
   try {
     const { id } = req.params;
 
+    if (!isValidObjectId(id))
+    return res.status(400).json({ message: "Invalid book ID" });
+
     const book = await Book.findById(id);
     if (!book) return res.status(404).json({ message: "Book not found" });
 
