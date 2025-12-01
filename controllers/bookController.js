@@ -152,26 +152,28 @@ const downloadBook = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // if (!isValidObjectId(id))
-    // return res.status(400).json({ message: "Invalid book ID" });
+    if (!isValidObjectId(id))
+      return res.status(400).json({ message: "Invalid book ID" });
 
     const book = await Book.findById(id);
     if (!book) return res.status(404).json({ message: "Book not found" });
 
-    await book.incrementDownloads();
+    // Increment download count
+    if (book.incrementDownloads) await book.incrementDownloads();
 
-    const pdfUrl = cloudinary.url(book.filePublicId, {
-      resource_type: "raw",
-      secure: true
-    });
+    // Force browser to download
+    res.setHeader("Content-Disposition", `attachment; filename="${book.title}.pdf"`);
 
-    res.redirect(pdfUrl + "?download=1");
+    // Redirect to Cloudinary RAW URL
+    return res.redirect(book.file);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to download PDF" });
+    console.error("PDF download error:", error);
+    return res.status(500).json({
+      message: "Failed to download PDF",
+      error: error.message,
+    });
   }
 };
-
 
 export {
   getAllBooks,
