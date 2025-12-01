@@ -25,6 +25,6 @@ bookSchema.methods.incrementDownloads = async function () {
 };
 
 // Avoid model overwrite in Next.js hot reload
-const Book = mongoose.models.Book || mongoose.model("Book", bookSchema);
+const Book = mongoose.model("Book", bookSchema);
 
 export default Book;
