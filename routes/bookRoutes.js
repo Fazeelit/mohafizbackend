@@ -21,36 +21,37 @@ router.get("/download/:id", validateId, async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Fetch the book from DB
-    const book = await getBookById(id);
+    // Fetch the book from DB correctly
+    const book = await findBookById(id);
+
     if (!book) return res.status(404).json({ error: "Book not found" });
     if (!book.filePublicId)
       return res.status(400).json({ error: "PDF not available for this book" });
 
     const pdfUrl = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/raw/upload/${book.filePublicId}.pdf`;
 
-    // Fetch PDF as arraybuffer
+    // Fetch PDF
     const response = await axios.get(pdfUrl, { responseType: "arraybuffer" });
 
-    // Set headers for download
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
       `attachment; filename="${book.title || "book"}.pdf"`
     );
 
-    // Send the PDF data
     res.send(response.data);
-  } catch (error) {
-    console.error("Download failed:", error.message, error.response?.data || "");
 
-    if (error.response && error.response.status === 404) {
+  } catch (error) {
+    console.error("Download failed:", error.message);
+
+    if (error.response?.status === 404) {
       return res.status(404).json({ error: "PDF file not found in Cloudinary" });
     }
 
     res.status(500).json({ error: "Failed to download PDF" });
   }
 });
+
 
 // ---------------- Get all books ----------------
 router.get("/", getAllBooks);
