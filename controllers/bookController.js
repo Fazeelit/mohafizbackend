@@ -1,5 +1,8 @@
 import Book from "../model/bookModel.js";
 import mongoose from "mongoose";
+import axios from "axios";
+import { isValidObjectId } from "mongoose";
+import { v2 as cloudinary } from "cloudinary";
 
 // Helper: Validate MongoDB ObjectId
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
@@ -163,21 +166,21 @@ const downloadBook = async (req, res) => {
     // Increment download count
     await book.incrementDownloads();
 
-    // Generate correct RAW PDF URL
+    // Generate RAW PDF URL from Cloudinary
     const pdfUrl = cloudinary.url(book.filePublicId, {
       resource_type: "raw",
       format: "pdf",
       secure: true,
     });
 
-    // Set browser download headers
+    // Force browser PDF download
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
       `attachment; filename="${book.title}.pdf"`
     );
 
-    // Stream PDF from Cloudinary
+    // Stream PDF from Cloudinary to frontend
     const cloudinaryStream = await axios({
       url: pdfUrl,
       method: "GET",
