@@ -18,7 +18,7 @@ const router = express.Router();
 /* --------------------------- Public Routes --------------------------- */
 
 // ---------------- Download book from Cloudinary ----------------
-router.get("/download/:id", validateId,downloadBook );
+router.get("/download/:id", downloadBook );
 
 
 // ---------------- Get all books ----------------
