@@ -148,32 +148,28 @@ const deleteBook = async (req, res) => {
 
 
 // ✅ Simulated download route (Public)
+import axios from "axios";
+
 const downloadBook = async (req, res) => {
+  const { id } = req.params;
+  const book = await Book.findById(id);
+  if (!book) return res.status(404).json({ message: "Book not found" });
+
+  await book.incrementDownloads();
+
   try {
-    const { id } = req.params;
+    const response = await axios.get(book.file, { responseType: "stream" });
 
-    if (!isValidObjectId(id))
-      return res.status(400).json({ message: "Invalid book ID" });
-
-    const book = await Book.findById(id);
-    if (!book) return res.status(404).json({ message: "Book not found" });
-
-    // Increment download count
-    if (book.incrementDownloads) await book.incrementDownloads();
-
-    // Force browser to download
+    res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="${book.title}.pdf"`);
 
-    // Redirect to Cloudinary RAW URL
-    return res.redirect(book.file);
-  } catch (error) {
-    console.error("PDF download error:", error);
-    return res.status(500).json({
-      message: "Failed to download PDF",
-      error: error.message,
-    });
+    response.data.pipe(res);
+  } catch (err) {
+    console.error("PDF stream error:", err);
+    res.status(500).json({ message: "Failed to download PDF", error: err.message });
   }
 };
+
 
 export {
   getAllBooks,
