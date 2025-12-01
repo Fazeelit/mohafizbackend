@@ -21,49 +21,77 @@ router.get("/download/:id", validateId, async (req, res) => {
   try {
     const { id } = req.params;
 
-    // TODO: Fetch the book from DB to get its Cloudinary public_id
-    // Example assuming getBookById returns book object
+    // Fetch the book from DB
     const book = await getBookById(id); 
-    if (!book || !book.filePublicId) {
+    if (!book) {
       return res.status(404).json({ error: "Book not found" });
     }
+    if (!book.filePublicId) {
+      return res.status(400).json({ error: "PDF not available for this book" });
+    }
 
-    const publicId = book.filePublicId;
+    const pdfUrl = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/raw/upload/${book.filePublicId}.pdf`;
 
-    // Construct Cloudinary raw PDF URL
-    const pdfUrl = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/raw/upload/${publicId}.pdf`;
-
-    // Fetch the PDF as a stream
+    // Fetch PDF as a stream from Cloudinary
     const response = await axios.get(pdfUrl, { responseType: "stream" });
 
-    // Set headers for proper PDF download
+    // Set headers for download
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="${book.title || "book"}.pdf"`);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${book.title || "book"}.pdf"`
+    );
 
-    // Pipe Cloudinary stream to client
+    // Pipe the stream to client
     response.data.pipe(res);
+
   } catch (error) {
-    console.error("Download failed:", error.message);
+    console.error("Download failed:", error);
+
+    // Handle Cloudinary 404
+    if (error.response && error.response.status === 404) {
+      return res.status(404).json({ error: "PDF file not found in Cloudinary" });
+    }
+
     res.status(500).json({ error: "Failed to download PDF" });
   }
 });
 
-// Get all books
+// ---------------- Get all books ----------------
 router.get("/", getAllBooks);
 
-// Get a single book by ID
+// ---------------- Get single book by ID ----------------
 router.get("/:id", validateId, getBookById);
 
 /* -------------------------- Admin Protected -------------------------- */
 
 // Create new book
 // Frontend should send file as "file"
-router.post("/uploadBook", uploadFile("file"), verifyToken, verifyAdmin, uploadBook);
+router.post(
+  "/uploadBook",
+  uploadFile("file"),
+  verifyToken,
+  verifyAdmin,
+  uploadBook
+);
 
 // Update book details
-router.put("/:id", uploadFile("file"), verifyToken, verifyAdmin, validateId, updateBook);
+router.put(
+  "/:id",
+  uploadFile("file"),
+  verifyToken,
+  verifyAdmin,
+  validateId,
+  updateBook
+);
 
 // Delete book
-router.delete("/deleteBook/:id", verifyToken, verifyAdmin, validateId, deleteBook);
+router.delete(
+  "/deleteBook/:id",
+  verifyToken,
+  verifyAdmin,
+  validateId,
+  deleteBook
+);
 
 export default router;
