@@ -100,40 +100,40 @@ const uploadBook = async (req, res) => {
 };
 
 //Download Book
-const downloadBook =async (req, res) => {
-  try {
-    const { id } = req.params;
+// const downloadBook =async (req, res) => {
+//   try {
+//     const { id } = req.params;
 
-    // Fetch the book from DB correctly
-    const book = await findBookById(id);
+//     // Fetch the book from DB correctly
+//     const book = await findBookById(id);
 
-    if (!book) return res.status(404).json({ error: "Book not found" });
-    if (!book.filePublicId)
-      return res.status(400).json({ error: "PDF not available for this book" });
+//     if (!book) return res.status(404).json({ error: "Book not found" });
+//     if (!book.filePublicId)
+//       return res.status(400).json({ error: "PDF not available for this book" });
 
-    const pdfUrl = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/raw/upload/${book.filePublicId}.pdf`;
+//     const pdfUrl = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/raw/upload/${book.filePublicId}.pdf`;
 
-    // Fetch PDF
-    const response = await axios.get(pdfUrl, { responseType: "arraybuffer" });
+//     // Fetch PDF
+//     const response = await axios.get(pdfUrl, { responseType: "arraybuffer" });
 
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${book.title || "book"}.pdf"`
-    );
+//     res.setHeader("Content-Type", "application/pdf");
+//     res.setHeader(
+//       "Content-Disposition",
+//       `attachment; filename="${book.title || "book"}.pdf"`
+//     );
 
-    res.send(response.data);
+//     res.send(response.data);
 
-  } catch (error) {
-    console.error("Download failed:", error.message);
+//   } catch (error) {
+//     console.error("Download failed:", error.message);
 
-    if (error.response?.status === 404) {
-      return res.status(404).json({ error: "PDF file not found in Cloudinary" });
-    }
+//     if (error.response?.status === 404) {
+//       return res.status(404).json({ error: "PDF file not found in Cloudinary" });
+//     }
 
-    res.status(500).json({ error: "Failed to download PDF" });
-  }
-}
+//     res.status(500).json({ error: "Failed to download PDF" });
+//   }
+// }
 
 
 // ✅ Update book details (Admin only)
@@ -180,30 +180,30 @@ const deleteBook = async (req, res) => {
   }
 };
 
-// //
-// // ✅ Simulated download route (Public)
-// //
-// const downloadBook = async (req, res) => {
-//   const { id } = req.params;
-//   if (!isValidObjectId(id))
-//     return res.status(400).json({ message: "Invalid book ID" });
+//
+// ✅ Simulated download route (Public)
+//
+const downloadBook = async (req, res) => {
+  const { id } = req.params;
+  if (!isValidObjectId(id))
+    return res.status(400).json({ message: "Invalid book ID" });
 
-//   try {
-//     const book = await Book.findById(id);
-//     if (!book) return res.status(404).json({ message: "Book not found" });
+  try {
+    const book = await Book.findById(id);
+    if (!book) return res.status(404).json({ message: "Book not found" });
 
-//     // Increment downloads using schema method
-//     await book.incrementDownloads();
+    // Increment downloads using schema method
+    await book.incrementDownloads();
 
-//     res.status(200).json({
-//       message: `Download started for "${book.title}"`,
-//       downloads: book.downloads,
-//       fileUrl: book.uploadedFileUrl,
-//     });
-//   } catch (err) {
-//     res.status(500).json({ message: "Error downloading book", error: err.message });
-//   }
-// };
+    res.status(200).json({
+      message: `Download started for "${book.title}"`,
+      downloads: book.downloads,
+      fileUrl: book.uploadedFileUrl,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Error downloading book", error: err.message });
+  }
+};
 
 export {
   getAllBooks,
