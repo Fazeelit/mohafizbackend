@@ -6,6 +6,7 @@ import {
   uploadBook,
   updateBook,
   deleteBook,
+  downloadBook
 } from "../controllers/bookController.js";
 
 import validateId from "../middleware/validateId.js";
@@ -17,40 +18,7 @@ const router = express.Router();
 /* --------------------------- Public Routes --------------------------- */
 
 // ---------------- Download book from Cloudinary ----------------
-router.get("/download/:id", validateId, async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Fetch the book from DB correctly
-    const book = await findBookById(id);
-
-    if (!book) return res.status(404).json({ error: "Book not found" });
-    if (!book.filePublicId)
-      return res.status(400).json({ error: "PDF not available for this book" });
-
-    const pdfUrl = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/raw/upload/${book.filePublicId}.pdf`;
-
-    // Fetch PDF
-    const response = await axios.get(pdfUrl, { responseType: "arraybuffer" });
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${book.title || "book"}.pdf"`
-    );
-
-    res.send(response.data);
-
-  } catch (error) {
-    console.error("Download failed:", error.message);
-
-    if (error.response?.status === 404) {
-      return res.status(404).json({ error: "PDF file not found in Cloudinary" });
-    }
-
-    res.status(500).json({ error: "Failed to download PDF" });
-  }
-});
+router.get("/download/:id", validateId,downloadBook );
 
 
 // ---------------- Get all books ----------------
@@ -73,7 +41,7 @@ router.post(
 
 // Update book details
 router.put(
-  "/:id",
+  "/updateBook/:id",
   uploadFile("file"),
   verifyToken,
   verifyAdmin,
