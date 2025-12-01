@@ -148,7 +148,7 @@ const deleteBook = async (req, res) => {
 
 
 // ✅ Simulated download route (Public)
-import axios from "axios";
+
 
 const downloadBook = async (req, res) => {
   const { id } = req.params;
