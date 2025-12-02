@@ -32,7 +32,6 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow requests with no origin (Postman, curl)
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -45,7 +44,7 @@ app.use(
 );
 
 // ------------------ Middleware ------------------
-app.use(express.json({ limit: "50mb" })); // Increase limit for large payloads
+app.use(express.json({ limit: "50mb" })); // Large payloads
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(morgan("dev"));
 
@@ -65,8 +64,13 @@ app.use("/api/helpline", helplinRoutes);
 
 console.log("✅ All route files loaded");
 
-// ------------------ Handle preflight for OPTIONS ------------------
-app.options("/api/*", cors({ origin: allowedOrigins, credentials: true }));
+// ------------------ Handle Preflight for All Routes ------------------
+app.options("*", cors({ origin: allowedOrigins, credentials: true }));
+
+// ------------------ Catch-All for Unmatched API Routes ------------------
+app.all("/api/*", (req, res) => {
+  res.status(404).json({ message: "API route not found" });
+});
 
 // ------------------ Global Error Handler ------------------
 app.use((err, req, res, next) => {
