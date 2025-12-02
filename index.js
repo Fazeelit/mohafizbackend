@@ -2,6 +2,9 @@ import express from "express";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import cors from "cors";
+
+dotenv.config();
+
 import dbConnect from "./config/database.js";
 import config from "./config/config.js";
 
@@ -15,14 +18,12 @@ import reportRoutes from "./routes/reportRoutes.js";
 import newsRoutes from "./routes/newsRoutes.js";
 import helplinRoutes from "./routes/helplineRoutes.js";
 
-dotenv.config();
-
-// Connect to MongoDB
+// ------------------ Connect to MongoDB ------------------
 dbConnect();
 
 const app = express();
 
-// CORS setup
+// ------------------ CORS Setup ------------------
 const allowedOrigins = [
   "http://localhost:3000",
   "https://muhafizdashboardproject.vercel.app",
@@ -31,7 +32,7 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (e.g., Postman)
+      // allow requests with no origin (Postman, curl)
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -39,21 +40,19 @@ app.use(
       }
     },
     credentials: true,
+    optionsSuccessStatus: 200,
   })
 );
 
-// Preflight for all routes
-app.options("*", cors({ origin: allowedOrigins, credentials: true }));
-
-// Middleware
-app.use(express.json({ limit: "50mb" })); // Increased limit for large JSON
+// ------------------ Middleware ------------------
+app.use(express.json({ limit: "50mb" })); // Increase limit for large payloads
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(morgan("dev"));
 
-// Root route
+// ------------------ Root Route ------------------
 app.get("/", (req, res) => res.send("✅ Backend is running!"));
 
-// Routes
+// ------------------ API Routes ------------------
 app.use("/api/users", userRoutes);
 app.use("/api/admins", adminRoutes);
 app.use("/api/books", bookRoutes);
@@ -66,18 +65,16 @@ app.use("/api/helpline", helplinRoutes);
 
 console.log("✅ All route files loaded");
 
-// 404 Handler
-app.use((req, res) => {
-  res.status(404).json({ message: "Route not found" });
-});
+// ------------------ Handle preflight for OPTIONS ------------------
+app.options("/api/*", cors({ origin: allowedOrigins, credentials: true }));
 
-// Global Error Handling
+// ------------------ Global Error Handler ------------------
 app.use((err, req, res, next) => {
   console.error("⚠️ Error:", err.message);
-  res.status(err.status || 500).json({ message: err.message || "Internal Server Error" });
+  res.status(500).json({ message: err.message || "Internal Server Error" });
 });
 
-// Start server
+// ------------------ Start Server ------------------
 const PORT = config.port || 8080;
 const HOST = config.host || "0.0.0.0";
 
