@@ -56,7 +56,9 @@ const uploadVideo = async (req, res) => {
 const getAllVideos = async (req, res) => {
   try {
     const videos = await Video.find().sort({ createdAt: -1 });
-    res.status(200).json(videos); // ✅ return array directly
+
+    // Wrap in an object so frontend can use res.data.videos
+    res.status(200).json({ videos }); 
   } catch (error) {
     res.status(500).json({
       message: "Error fetching videos",
@@ -64,7 +66,6 @@ const getAllVideos = async (req, res) => {
     });
   }
 };
-
 
 // =============================
 // 📌 GET VIDEO BY ID
