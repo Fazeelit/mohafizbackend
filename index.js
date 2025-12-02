@@ -2,10 +2,6 @@ import express from "express";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import cors from "cors";
-
-
-dotenv.config();
-
 import dbConnect from "./config/database.js";
 import config from "./config/config.js";
 
@@ -17,7 +13,9 @@ import emergencyRoutes from "./routes/emergencyRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import newsRoutes from "./routes/newsRoutes.js";
-import helplinRoutes from "./routes/helplineRoutes.js"
+import helplinRoutes from "./routes/helplineRoutes.js";
+
+dotenv.config();
 
 // Connect to MongoDB
 dbConnect();
@@ -33,7 +31,7 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow requests with no origin (Postman)
+      // Allow requests with no origin (e.g., Postman)
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -44,9 +42,12 @@ app.use(
   })
 );
 
+// Preflight for all routes
+app.options("*", cors({ origin: allowedOrigins, credentials: true }));
+
 // Middleware
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(express.json({ limit: "50mb" })); // Increased limit for large JSON
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(morgan("dev"));
 
 // Root route
@@ -65,10 +66,15 @@ app.use("/api/helpline", helplinRoutes);
 
 console.log("✅ All route files loaded");
 
-// Error handling
+// 404 Handler
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
+
+// Global Error Handling
 app.use((err, req, res, next) => {
   console.error("⚠️ Error:", err.message);
-  res.status(500).json({ message: err.message || "Internal Server Error" });
+  res.status(err.status || 500).json({ message: err.message || "Internal Server Error" });
 });
 
 // Start server
