@@ -28,23 +28,10 @@ const allowedOrigins = [
   "http://localhost:3000",
   "https://muhafizdashboardproject.vercel.app",
 ];
-
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-    optionsSuccessStatus: 200,
-  })
-);
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 
 // ------------------ Middleware ------------------
-app.use(express.json({ limit: "50mb" })); // Large payloads
+app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(morgan("dev"));
 
@@ -64,11 +51,8 @@ app.use("/api/helpline", helplinRoutes);
 
 console.log("✅ All route files loaded");
 
-// ------------------ Handle Preflight for All Routes ------------------
-app.options("*", cors({ origin: allowedOrigins, credentials: true }));
-
 // ------------------ Catch-All for Unmatched API Routes ------------------
-app.all("/api/*", (req, res) => {
+app.all(/^\/api\/.*/, (req, res) => {
   res.status(404).json({ message: "API route not found" });
 });
 
