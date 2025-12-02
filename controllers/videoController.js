@@ -7,7 +7,6 @@ const uploadVideo = async (req, res) => {
   try {
     const { title, instructor, category, duration, status } = req.body;
 
-    // Validate required fields
     if (!title || !instructor || !category || !duration) {
       return res.status(400).json({
         message: "Title, instructor, category, and duration are required",
@@ -18,21 +17,20 @@ const uploadVideo = async (req, res) => {
       return res.status(400).json({ message: "Video upload failed or missing URL" });
     }
 
-    // Normalize status
     const allowedStatus = ["published", "draft", "pending"];
-    const normalizedStatus = allowedStatus.includes((status || "").toLowerCase())
-      ? status.toLowerCase()
-      : "pending";
+    const normalizedStatus =
+      allowedStatus.includes((status || "").toLowerCase())
+        ? status.toLowerCase()
+        : "pending";
 
-    // Create new video
     const newVideo = new Video({
       title,
       instructor,
       category,
       duration,
       views: 0,
-      status: normalizedStatus, // ✅ safe now
-      videoFile: req.fileUrl,
+      status: normalizedStatus,
+      videoFile: req.fileUrl, // ✅ Correct
     });
 
     await newVideo.save();
@@ -56,9 +54,7 @@ const uploadVideo = async (req, res) => {
 const getAllVideos = async (req, res) => {
   try {
     const videos = await Video.find().sort({ createdAt: -1 });
-
-    // Wrap in an object so frontend can use res.data.videos
-    res.status(200).json({ videos }); 
+    res.status(200).json({ videos });
   } catch (error) {
     res.status(500).json({
       message: "Error fetching videos",
@@ -73,9 +69,7 @@ const getAllVideos = async (req, res) => {
 const getVideoById = async (req, res) => {
   try {
     const video = await Video.findById(req.params.id);
-
     if (!video) return res.status(404).json({ message: "Video not found" });
-
     res.status(200).json(video);
   } catch (error) {
     res.status(500).json({
@@ -92,17 +86,23 @@ const updateVideo = async (req, res) => {
   try {
     const { title, instructor, category, duration, status } = req.body;
 
-    let updateData = {
-      title,
-      instructor,
-      category,
-      duration,
-      status,
-    };
+    let updateData = {};
 
-    // If a new uploaded file is available
+    if (title) updateData.title = title;
+    if (instructor) updateData.instructor = instructor;
+    if (category) updateData.category = category;
+    if (duration) updateData.duration = duration;
+
+    if (status) {
+      const allowedStatus = ["published", "draft", "pending"];
+      updateData.status = allowedStatus.includes(status.toLowerCase())
+        ? status.toLowerCase()
+        : "pending";
+    }
+
+    // If a new file was uploaded
     if (req.fileUrl) {
-      updateData.videoUrl = req.fileUrl;
+      updateData.videoFile = req.fileUrl; // ✅ FIXED
     }
 
     const updatedVideo = await Video.findByIdAndUpdate(
@@ -148,10 +148,4 @@ const deleteVideo = async (req, res) => {
   }
 };
 
-export {
-  uploadVideo,
-  getAllVideos,
-  getVideoById,
-  updateVideo,
-  deleteVideo,
-};
+export { uploadVideo, getAllVideos, getVideoById, updateVideo, deleteVideo };
