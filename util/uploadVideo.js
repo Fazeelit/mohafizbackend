@@ -1,18 +1,25 @@
 import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
+import path from "path";
 import config from "../config/config.js";
 
-// Cloudinary config
+// ---------------- Cloudinary Config ----------------
 cloudinary.config({
   cloud_name: config.cloudinary.cloud_name,
   api_key: config.cloudinary.api_key,
   api_secret: config.cloudinary.api_secret,
 });
 
-// Multer Disk Storage
+// ---------------- Ensure Upload Folder Exists ----------------
+const uploadDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// ---------------- Multer Disk Storage ----------------
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
+  destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
 });
 
@@ -25,7 +32,7 @@ const upload = multer({
   },
 });
 
-// Upload middleware
+// ---------------- Upload Middleware ----------------
 const uploadVideo = (fieldName = "videoFile") => {
   return (req, res, next) => {
     upload.single(fieldName)(req, res, async (err) => {
