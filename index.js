@@ -2,6 +2,7 @@ import express from "express";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import cors from "cors";
+import http from "http"; // Needed to adjust server timeout
 
 dotenv.config();
 
@@ -31,8 +32,10 @@ const allowedOrigins = [
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 
 // ------------------ Middleware ------------------
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+// Increase JSON & URL-encoded limits for large payloads
+app.use(express.json({ limit: "2gb" }));
+app.use(express.urlencoded({ extended: true, limit: "2gb" }));
+
 app.use(morgan("dev"));
 
 // ------------------ Root Route ------------------
@@ -66,6 +69,11 @@ app.use((err, req, res, next) => {
 const PORT = config.port || 8080;
 const HOST = config.host || "0.0.0.0";
 
-app.listen(PORT, HOST, () => {
+const server = http.createServer(app);
+
+// Increase server timeout for large video uploads (e.g., 2 hours)
+server.timeout = 2 * 60 * 60 * 1000; // 2 hours
+
+server.listen(PORT, HOST, () => {
   console.log(`🚀 Server running at http://${HOST}:${PORT}`);
 });

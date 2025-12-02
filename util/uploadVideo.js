@@ -14,7 +14,7 @@ cloudinary.config({
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
-  limits: { fileSize: 1024 * 1024 * 1024 }, // 1GB
+  limits: { fileSize: 1024 * 1024 * 1024 }, // 1GB max
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith("video/")) cb(null, true);
     else cb(new Error("Only video files are allowed"));
@@ -22,7 +22,7 @@ const upload = multer({
 });
 
 // ---------------- Upload Middleware ----------------
-const uploadVideo = (fieldName = "file") => {
+const uploadVideo = (fieldName = "videoFile") => {
   return (req, res, next) => {
     upload.single(fieldName)(req, res, async (err) => {
       // Multer errors
@@ -43,6 +43,8 @@ const uploadVideo = (fieldName = "file") => {
               {
                 folder: "videos",
                 resource_type: "video",
+                chunk_size: 6000000, // 6MB per chunk, helps with large uploads
+                timeout: 3600000, // 1 hour timeout for large uploads
               },
               (error, result) => {
                 if (error) reject(error);
@@ -50,12 +52,17 @@ const uploadVideo = (fieldName = "file") => {
               }
             );
 
+            // Pipe file buffer to Cloudinary
             streamifier.createReadStream(req.file.buffer).pipe(stream);
           });
         };
 
         const result = await streamUpload();
         req.fileUrl = result.secure_url;
+
+        // Increase server timeout for large uploads
+        if (req.socket) req.socket.setTimeout(7200000); // 2 hours
+
         next();
       } catch (uploadErr) {
         console.error("Cloudinary Upload Error:", uploadErr);
