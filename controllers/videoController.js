@@ -1,52 +1,65 @@
 import Video from "../model/videosModel.js";
 
-// =============================
 // 📌 ADD NEW VIDEO
 // =============================
 const uploadVideo = async (req, res) => {
   try {
     const { title, instructor, category, duration, status } = req.body;
 
+    // --------- Basic Validation ----------
     if (!title || !instructor || !category || !duration) {
       return res.status(400).json({
+        success: false,
         message: "Title, instructor, category, and duration are required",
       });
     }
 
+    // --------- Video Upload Check ----------
     if (!req.fileUrl) {
-      return res.status(400).json({ message: "Video upload failed or missing URL" });
+      return res.status(400).json({
+        success: false,
+        message: "Video upload failed or missing Cloudinary URL",
+      });
     }
 
-    const allowedStatus = ["published", "draft", "pending"];
-    const normalizedStatus =
-      allowedStatus.includes((status || "").toLowerCase())
-        ? status.toLowerCase()
-        : "pending";
+    // --------- Normalize & Clean Data ----------
+    const normalizedStatus = ["published", "draft", "pending"].includes(
+      String(status || "").toLowerCase()
+    )
+      ? status.toLowerCase()
+      : "pending";
 
+    // --------- Create New Video Document ----------
     const newVideo = new Video({
-      title,
-      instructor,
-      category,
-      duration,
+      title: title.trim(),
+      instructor: instructor.trim(),
+      category: category.trim(),
+      duration: duration.trim(),
       views: 0,
       status: normalizedStatus,
-      videoFile: req.fileUrl, // ✅ Correct
+      videoUrl: req.fileUrl, // ⭐ Using standard field name
     });
 
     await newVideo.save();
 
-    res.status(201).json({
-      message: "Video added successfully",
+    return res.status(201).json({
+      success: true,
+      message: "Video uploaded successfully",
       video: newVideo,
     });
+
   } catch (error) {
-    console.error("Upload Video Error:", error);
-    res.status(500).json({
-      message: "Error uploading video",
+    console.error("❌ Upload Video Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while uploading video",
       error: error.message,
     });
   }
 };
+
+export default uploadVideo;
+
 
 // =============================
 // 📌 GET ALL VIDEOS
