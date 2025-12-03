@@ -9,72 +9,69 @@ cloudinary.config({
   cloud_name: config.cloudinary.cloud_name,
   api_key: config.cloudinary.api_key,
   api_secret: config.cloudinary.api_secret,
-  secure: true,
 });
 
 // ---------------- Ensure Upload Folder Exists ----------------
 const uploadDir = path.join(process.cwd(), "uploads");
-fs.promises.mkdir(uploadDir, { recursive: true }).catch(console.error);
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
-// ---------------- Multer Storage ----------------
+// ---------------- Multer Disk Storage ----------------
 const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadDir),
-  filename: (_req, file, cb) => {
-    const safeName = file.originalname.replace(/\s+/g, "_");
-    cb(null, `${Date.now()}-${safeName}`);
-  },
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) =>
+    cb(null, Date.now() + "-" + file.originalname.replace(/\s+/g, "_")),
 });
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 * 1024 }, // 5GB max
-  fileFilter: (_req, file, cb) => {
-    const allowed = ["video/mp4", "video/avi", "video/mkv", "video/mov"];
-    allowed.includes(file.mimetype)
-      ? cb(null, true)
-      : cb(new Error("Only video formats allowed (mp4/avi/mkv/mov)"));
+  limits: { fileSize: 1024 * 1024 * 1024 }, // Max 1GB
+  fileFilter: (req, file, cb) => {
+    const allowed = ["video/mp4", "video/mkv", "video/avi", "video/mov"];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error("Only video files allowed (mp4, mkv, avi, mov)"));
   },
 });
 
-// ---------------- Stream Upload Middleware ----------------
+// ---------------- Upload Middleware ----------------
 const uploadVideo = (fieldName = "videoFile") => {
   return (req, res, next) => {
     upload.single(fieldName)(req, res, async (err) => {
-      if (err) return res.status(400).json({ success: false, message: err.message });
-      if (!req.file) return next();
+      if (err) {
+        return res.status(400).json({ success: false, message: err.message });
+      }
+
+      if (!req.file) return next(); // No file → skip upload
 
       try {
-        console.log("📤 Streaming video to Cloudinary...");
-
-        const result = await new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            {
-              folder: "videos",
-              resource_type: "video",
-              use_filename: true,
-              unique_filename: false,
-            },
-            (error, uploaded) => {
-              if (error) reject(error);
-              else resolve(uploaded);
-            }
-          );
-          fs.createReadStream(req.file.path).pipe(stream);
+        // Upload to Cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path, {
+          folder: "videos",
+          resource_type: "video",
+          chunk_size: 6000000, // Safe for large videos
         });
 
         req.fileUrl = result.secure_url;
-        console.log("✅ Cloudinary Upload Success:", req.fileUrl);
 
-        // Delete local temp file
-        fs.promises.unlink(req.file.path).catch(() => {});
+        // Delete local temp file safely
+        fs.unlink(req.file.path, (unlinkErr) => {
+          if (unlinkErr) console.error("Failed to delete temp file:", unlinkErr);
+        });
+
         next();
       } catch (uploadErr) {
-        console.error("❌ Cloudinary Upload Failed:", uploadErr);
-        fs.promises.unlink(req.file.path).catch(() => {});
+        console.error("Cloudinary Upload Error:", uploadErr);
+
+        // Delete local file even if Cloudinary fails
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch (_) {}
+
         return res.status(500).json({
           success: false,
           message: "Failed to upload video to Cloudinary",
-          cloudinaryError: uploadErr.message,
+          error: uploadErr.message,
         });
       }
     });
