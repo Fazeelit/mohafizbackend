@@ -1,6 +1,6 @@
 import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
-import fs from "fs/promises";
+import fs from "fs";
 import path from "path";
 import config from "../config/config.js";
 
@@ -14,14 +14,7 @@ cloudinary.config({
 
 // ---------------- Ensure Upload Folder Exists ----------------
 const uploadDir = path.join(process.cwd(), "uploads");
-(async () => {
-  try {
-    await fs.mkdir(uploadDir, { recursive: true });
-    console.log("📁 Upload folder ready:", uploadDir);
-  } catch (err) {
-    console.error("❌ Failed to create upload folder:", err);
-  }
-})();
+fs.promises.mkdir(uploadDir, { recursive: true }).catch(console.error);
 
 // ---------------- Multer Storage ----------------
 const storage = multer.diskStorage({
@@ -34,7 +27,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 2 * 1024 * 1024 * 1024 }, // 2GB max
+  limits: { fileSize: 5 * 1024 * 1024 * 1024 }, // 5GB max
   fileFilter: (_req, file, cb) => {
     const allowed = ["video/mp4", "video/avi", "video/mkv", "video/mov"];
     allowed.includes(file.mimetype)
@@ -43,48 +36,45 @@ const upload = multer({
   },
 });
 
-// ---------------- Upload Middleware ----------------
+// ---------------- Stream Upload Middleware ----------------
 const uploadVideo = (fieldName = "videoFile") => {
   return (req, res, next) => {
     upload.single(fieldName)(req, res, async (err) => {
-      if (err) {
-        return res.status(400).json({ success: false, message: err.message });
-      }
-
-      if (!req.file) {
-        req.fileUrl = null;
-        return next();
-      }
+      if (err) return res.status(400).json({ success: false, message: err.message });
+      if (!req.file) return next();
 
       try {
-        console.log("📤 Uploading video to Cloudinary...");
+        console.log("📤 Streaming video to Cloudinary...");
 
-        const result = await cloudinary.uploader.upload(req.file.path, {
-          folder: "videos",
-          resource_type: "video",   // MUST for video
-          chunk_size: 10 * 1024 * 1024, // 10MB chunks for large files
-          timeout: 30 * 60 * 1000,  // 30 minutes
-          use_filename: true,
-          unique_filename: false,
+        const result = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              folder: "videos",
+              resource_type: "video",
+              use_filename: true,
+              unique_filename: false,
+            },
+            (error, uploaded) => {
+              if (error) reject(error);
+              else resolve(uploaded);
+            }
+          );
+          fs.createReadStream(req.file.path).pipe(stream);
         });
 
         req.fileUrl = result.secure_url;
         console.log("✅ Cloudinary Upload Success:", req.fileUrl);
 
-        // Delete local temp file safely
-        await fs.unlink(req.file.path).catch(() => {});
+        // Delete local temp file
+        fs.promises.unlink(req.file.path).catch(() => {});
         next();
       } catch (uploadErr) {
         console.error("❌ Cloudinary Upload Failed:", uploadErr);
-
-        // Cleanup temp file
-        await fs.unlink(req.file.path).catch(() => {});
-
+        fs.promises.unlink(req.file.path).catch(() => {});
         return res.status(500).json({
           success: false,
           message: "Failed to upload video to Cloudinary",
           cloudinaryError: uploadErr.message,
-          rawError: uploadErr,
         });
       }
     });
