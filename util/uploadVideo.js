@@ -12,14 +12,14 @@ cloudinary.config({
   secure: true,
 });
 
-// ---------------- Create Upload Folder ----------------
-const uploadDir = path.join(process.cwd(), "/uploads");
-
+// ---------------- Ensure Upload Folder Exists ----------------
+const uploadDir = path.join(process.cwd(), "uploads");
 (async () => {
   try {
     await fs.mkdir(uploadDir, { recursive: true });
-  } catch (e) {
-    console.error("❌ Upload folder creation failed:", e);
+    console.log("📁 Upload folder ready:", uploadDir);
+  } catch (err) {
+    console.error("❌ Failed to create upload folder:", err);
   }
 })();
 
@@ -34,10 +34,10 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 1024 * 1024 * 2048 }, // 2GB max
+  limits: { fileSize: 2 * 1024 * 1024 * 1024 }, // 2GB max
   fileFilter: (_req, file, cb) => {
     const allowed = ["video/mp4", "video/avi", "video/mkv", "video/mov"];
-    return allowed.includes(file.mimetype)
+    allowed.includes(file.mimetype)
       ? cb(null, true)
       : cb(new Error("Only video formats allowed (mp4/avi/mkv/mov)"));
   },
@@ -51,35 +51,40 @@ const uploadVideo = (fieldName = "videoFile") => {
         return res.status(400).json({ success: false, message: err.message });
       }
 
-      // No file uploaded → continue request
       if (!req.file) {
         req.fileUrl = null;
         return next();
       }
 
       try {
-        console.log("📤 Uploading file to Cloudinary...");
+        console.log("📤 Uploading video to Cloudinary...");
 
-        const response = await cloudinary.uploader.upload(req.file.path, {
+        const result = await cloudinary.uploader.upload(req.file.path, {
           folder: "videos",
-          resource_type: "video",
-          chunk_size: 6500000,
-          timeout: 600000, // extra stability
+          resource_type: "video",   // MUST for video
+          chunk_size: 10 * 1024 * 1024, // 10MB chunks for large files
+          timeout: 30 * 60 * 1000,  // 30 minutes
+          use_filename: true,
+          unique_filename: false,
         });
 
-        req.fileUrl = response.secure_url;
-        console.log("✅ Uploaded:", req.fileUrl);
+        req.fileUrl = result.secure_url;
+        console.log("✅ Cloudinary Upload Success:", req.fileUrl);
 
+        // Delete local temp file safely
         await fs.unlink(req.file.path).catch(() => {});
         next();
-      } catch (error) {
-        console.error("❌ Cloudinary Upload Error:", error);
+      } catch (uploadErr) {
+        console.error("❌ Cloudinary Upload Failed:", uploadErr);
 
+        // Cleanup temp file
         await fs.unlink(req.file.path).catch(() => {});
+
         return res.status(500).json({
           success: false,
           message: "Failed to upload video to Cloudinary",
-          cloudinaryError: error.message,
+          cloudinaryError: uploadErr.message,
+          rawError: uploadErr,
         });
       }
     });
