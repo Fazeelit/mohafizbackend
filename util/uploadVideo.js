@@ -3,20 +3,20 @@ import { v2 as cloudinary } from "cloudinary";
 import streamifier from "streamifier";
 import config from "../config/config.js";
 
-// Cloudinary configuration
+// Cloudinary config
 cloudinary.config({
   cloud_name: config.cloudinary.cloud_name,
   api_key: config.cloudinary.api_key,
   api_secret: config.cloudinary.api_secret,
 });
 
-// Multer memory storage (no temp file)
+// Multer: memory storage
 const storage = multer.memoryStorage();
 
-// Allow max 2 GB file
+// 2GB max upload size
 const MAX_VIDEO_SIZE = 2 * 1024 * 1024 * 1024;
 
-// Multer upload config
+// Multer config
 const upload = multer({
   storage,
   limits: { fileSize: MAX_VIDEO_SIZE },
@@ -26,16 +26,14 @@ const upload = multer({
   },
 });
 
-// Cloudinary Stream Upload with Chunk Support
+// ⚠ Correct Cloudinary Upload (upload_stream)
+// Cloudinary chunks automatically — we do NOT set chunk_size manually
 const cloudinaryVideoUpload = (buffer) =>
   new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
+    const stream = cloudinary.uploader.upload_stream(
       {
         folder: "videos",
         resource_type: "video",
-        chunk_size: 6 * 1024 * 1024, // 6MB chunks (best for slow internet)
-        timeout: 120000, // 2 minute timeout per chunk
-        eager_async: true, // async processing
       },
       (error, result) => {
         if (error) return reject(error);
@@ -43,12 +41,11 @@ const cloudinaryVideoUpload = (buffer) =>
       }
     );
 
-    // Pipe the buffer into Cloudinary
-    streamifier.createReadStream(buffer).pipe(uploadStream);
+    streamifier.createReadStream(buffer).pipe(stream);
   });
 
 // Upload Middleware
-const uploadVideo = (fieldName = "file") => {
+const uploadVideo = (fieldName = "videoFile") => {
   return (req, res, next) => {
     upload.single(fieldName)(req, res, async (err) => {
       if (err) {
@@ -58,19 +55,20 @@ const uploadVideo = (fieldName = "file") => {
         });
       }
 
+      // No file uploaded — continue request
       if (!req.file) return next();
 
       try {
-        // Upload video stream to Cloudinary
         const result = await cloudinaryVideoUpload(req.file.buffer);
 
-        // Attach Cloudinary data to req
+        // Attach Cloudinary file data
         req.fileUrl = result.secure_url;
         req.filePublicId = result.public_id;
 
         next();
       } catch (uploadErr) {
         console.error("Cloudinary upload failed:", uploadErr);
+
         return res.status(500).json({
           error: "Failed to upload video to Cloudinary",
           details: uploadErr.message,
