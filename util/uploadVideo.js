@@ -12,9 +12,13 @@ cloudinary.config({
 
 // Multer memory storage (no disk files)
 const storage = multer.memoryStorage();
+
+// Max file size: 2 GB
+const MAX_VIDEO_SIZE = 2 * 1024 * 1024 * 1024; // 2 GB in bytes
+
 const upload = multer({
   storage,
-  limits: { fileSize: 1024 * 1024 * 1024 }, // 1 GB max
+  limits: { fileSize: MAX_VIDEO_SIZE },
   fileFilter: (req, file, cb) => {
     // Accept only video files
     if (file.mimetype.startsWith("video/")) {
@@ -30,19 +34,20 @@ const uploadVideo = (fieldName = "file") => {
   return (req, res, next) => {
     upload.single(fieldName)(req, res, async (err) => {
       if (err) {
+        // Multer error
         return res.status(400).json({
           error: "Video upload failed",
           details: err.message,
         });
       }
 
-      // No file uploaded → continue
+      // No file uploaded → skip
       if (!req.file) return next();
 
       try {
-        // Upload buffer directly to Cloudinary
-        const streamUpload = (buffer) => {
-          return new Promise((resolve, reject) => {
+        // Stream upload to Cloudinary
+        const streamUpload = (buffer) =>
+          new Promise((resolve, reject) => {
             const stream = cloudinary.uploader.upload_stream(
               { folder: "videos", resource_type: "video" },
               (error, result) => {
@@ -52,15 +57,20 @@ const uploadVideo = (fieldName = "file") => {
             );
             streamifier.createReadStream(buffer).pipe(stream);
           });
-        };
 
         const result = await streamUpload(req.file.buffer);
+
+        // Attach Cloudinary URL to request
         req.fileUrl = result.secure_url;
+        req.filePublicId = result.public_id;
 
         next();
       } catch (uploadErr) {
         console.error("Cloudinary upload failed:", uploadErr);
-        res.status(500).json({ error: "Failed to upload to Cloudinary" });
+        return res.status(500).json({
+          error: "Failed to upload video to Cloudinary",
+          details: uploadErr.message,
+        });
       }
     });
   };
