@@ -10,8 +10,8 @@ const bookSchema = new mongoose.Schema(
     downloads: { type: Number, default: 0, min: 0 },
     status: {
       type: String,
-      enum: ["available", "unavailable", "active", "inactive"], // added more valid options
-      default: "available",
+      enum: ["published", "draft", "pending"], // added more valid options
+      default: "pending",
     },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },
   },
