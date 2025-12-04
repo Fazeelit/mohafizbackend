@@ -10,12 +10,10 @@ cloudinary.config({
   api_secret: config.cloudinary.api_secret,
 });
 
-// Multer temp-disk storage (for large files, safer than memory)
+// Multer temp-disk storage (safe for large uploads)
 const storage = multer.diskStorage({
   destination: "tmp/",
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
+  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
 });
 
 const upload = multer({
@@ -27,7 +25,25 @@ const upload = multer({
   },
 });
 
-// Upload middleware with Cloudinary large video support
+// ⚡ Helper: Promise wrapper for Cloudinary upload_large
+const uploadLargeVideo = (filePath) => {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_large(
+      filePath,
+      {
+        resource_type: "video",
+        folder: "videos",
+        chunk_size: 6 * 1024 * 1024, // 6 MB
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+  });
+};
+
+// Upload middleware
 const uploadVideo = (field = "videoFile") => {
   return (req, res, next) => {
     upload.single(field)(req, res, async (err) => {
@@ -41,27 +57,14 @@ const uploadVideo = (field = "videoFile") => {
       if (!req.file) return next();
 
       try {
-        // ⚡ Use upload_large for big videos (>100MB)
-        const result = await cloudinary.uploader.upload_large(
-          req.file.path,
-          {
-            resource_type: "video",
-            folder: "videos",
-            chunk_size: 6 * 1024 * 1024, // 6 MB per chunk, good for slow connections
-          },
-          (progressEvent) => {
-            const percent = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
-            console.log(`Upload progress: ${percent}%`);
-          }
-        );
+        // Upload video using Cloudinary
+        const result = await uploadLargeVideo(req.file.path);
 
         // Attach Cloudinary info to request
         req.fileUrl = result.secure_url;
         req.filePublicId = result.public_id;
 
-        // Delete temp file after upload
+        // Delete temp file
         fs.unlink(req.file.path, (err) => {
           if (err) console.warn("Temp file deletion failed:", err);
         });
