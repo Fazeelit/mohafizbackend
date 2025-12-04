@@ -6,7 +6,7 @@ const uploadVideo = async (req, res) => {
   try {
     const { title, instructor, category, duration, status } = req.body;
 
-    // --------- Basic Validation ----------
+    // ---------- Basic Validation ----------
     if (!title || !instructor || !category || !duration) {
       return res.status(400).json({
         success: false,
@@ -14,30 +14,46 @@ const uploadVideo = async (req, res) => {
       });
     }
 
-    // --------- Video Upload Check ----------
+    // ---------- Video Upload Check ----------
     if (!req.fileUrl) {
       return res.status(400).json({
         success: false,
-        message: "Video upload failed or missing Cloudinary URL",
+        message: "Video upload failed. No Cloudinary URL received.",
       });
     }
 
-    // --------- Normalize & Clean Data ----------
+    // ---------- Duration Normalization ----------
+    const cleanDuration =
+      typeof duration === "string" ? duration.trim() : String(duration);
+
+    // ---------- Status Normalization ----------
     const normalizedStatus = ["published", "draft", "pending"].includes(
       String(status || "").toLowerCase()
     )
       ? status.toLowerCase()
       : "pending";
 
-    // --------- Create New Video Document ----------
+    // ---------- OPTIONAL: Prevent Duplicate Titles ----------
+    const existingVideo = await Video.findOne({ title: title.trim() });
+    if (existingVideo) {
+      return res.status(400).json({
+        success: false,
+        message: "A video with this title already exists",
+      });
+    }
+
+    // ---------- Create New Video Document ----------
     const newVideo = new Video({
       title: title.trim(),
       instructor: instructor.trim(),
       category: category.trim(),
-      duration: duration.trim(),
+      duration: cleanDuration,
       views: 0,
       status: normalizedStatus,
-      videoUrl: req.fileUrl, // ⭐ Using standard field name
+
+      // ⭐ Cloudinary Data
+      videoUrl: req.fileUrl,
+      publicId: req.filePublicId || null, // <-- Save for deletion later
     });
 
     await newVideo.save();
@@ -47,9 +63,9 @@ const uploadVideo = async (req, res) => {
       message: "Video uploaded successfully",
       video: newVideo,
     });
-
   } catch (error) {
     console.error("❌ Upload Video Error:", error);
+
     return res.status(500).json({
       success: false,
       message: "Internal server error while uploading video",
@@ -58,7 +74,7 @@ const uploadVideo = async (req, res) => {
   }
 };
 
-export default uploadVideo;
+
 
 
 // =============================
