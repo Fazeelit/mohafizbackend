@@ -1,7 +1,6 @@
 import Video from "../model/videosModel.js";
 
 // 📌 ADD NEW VIDEO
-// =============================
 const uploadVideo = async (req, res) => {
   try {
     const { title, instructor, category, duration, status } = req.body;
@@ -22,15 +21,15 @@ const uploadVideo = async (req, res) => {
       });
     }
 
-    // ---------- Duration Normalization ----------
+    // ---------- Normalize Duration ----------
     const cleanDuration =
       typeof duration === "string" ? duration.trim() : String(duration);
 
-    // ---------- Status Normalization ----------
+    // ---------- Normalize Status ----------
     const normalizedStatus = ["published", "draft", "pending"].includes(
       String(status || "").toLowerCase()
     )
-      ? status.toLowerCase()
+      ? String(status).toLowerCase()
       : "pending";
 
     // ---------- OPTIONAL: Prevent Duplicate Titles ----------
@@ -52,8 +51,8 @@ const uploadVideo = async (req, res) => {
       status: normalizedStatus,
 
       // ⭐ Cloudinary Data
-      videoUrl: req.fileUrl,
-      publicId: req.filePublicId || null, // <-- Save for deletion later
+      videoFile: req.fileUrl, // Must match your schema field (was videoFile)
+      publicId: req.filePublicId || null, // Store for deletion later
     });
 
     await newVideo.save();
@@ -73,6 +72,7 @@ const uploadVideo = async (req, res) => {
     });
   }
 };
+
 
 
 
