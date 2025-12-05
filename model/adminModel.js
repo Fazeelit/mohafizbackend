@@ -22,6 +22,7 @@ const userSchema = new mongoose.Schema({
   status: { type: String, enum: ["active", "inactive"], default: "active" },
   profilePicture: { type: String, default: "default.jpg" },
   address: { type: String, default: "" },
+  token: { type: String, default: "" },
   phone: {
     type: String, // use string to preserve formatting
     validate: {
@@ -30,7 +31,7 @@ const userSchema = new mongoose.Schema({
     }
   },
   wishlist: [
-    { type: mongoose.Schema.Types.ObjectId, ref: "Product" }
+    { type: mongoose.Schema.Types.ObjectId, ref: "Admin" }
   ],
 });
 

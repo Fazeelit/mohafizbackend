@@ -1,4 +1,5 @@
 import Video from "../model/videosModel.js";
+import axios from "axios";
 
 // 📌 ADD NEW VIDEO
 const uploadVideo = async (req, res) => {
@@ -180,4 +181,57 @@ const deleteVideo = async (req, res) => {
   }
 };
 
-export { uploadVideo, getAllVideos, getVideoById, updateVideo, deleteVideo };
+// =============================
+// 📌 DOWNLOAD VIDEO
+// =============================
+const downloadVideo = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ message: "Video ID is required" });
+    }
+
+    const video = await Video.findById(id);
+    if (!video) {
+      return res.status(404).json({ message: "Video not found" });
+    }
+
+    if (!video.videoFile) {
+      return res.status(400).json({ message: "Video file URL not available" });
+    }
+
+    // axios GET request to fetch remote file
+    const fileUrl = video.videoFile;
+
+    const response = await axios({
+      method: "GET",
+      url: fileUrl,
+      responseType: "stream",
+    });
+
+    // Get file extension automatically (important for non-MP4)
+    const fileExtension = fileUrl.split(".").pop().split("?")[0] || "mp4";
+    const safeTitle = video.title.replace(/[^a-zA-Z0-9-_ ]/g, "");
+
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${safeTitle}.${fileExtension}"`
+    );
+    res.setHeader("Content-Type", response.headers["content-type"] || "video/mp4");
+
+    // Stream video to user
+    response.data.pipe(res);
+
+  } catch (error) {
+    console.error("❌ Download Video Error:", error);
+
+    return res.status(500).json({
+      message: "Error downloading video",
+      error: error.message,
+    });
+  }
+};
+
+
+export { uploadVideo, getAllVideos, getVideoById, updateVideo, deleteVideo ,downloadVideo};
