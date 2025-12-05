@@ -17,10 +17,10 @@ const router = express.Router();
 /* ------------------------- PUBLIC ROUTES ------------------------- */
 
 // Get all videos
-router.get("/", getAllVideos);
+router.get("/",verifyToken, getAllVideos);
 
 // Get single video by ID
-router.get("/:id", validateId, getVideoById);
+router.get("/:id", validateId,verifyToken, getVideoById);
 
 // Download video by ID
 router.get("/download/:id", validateId, downloadVideo); // ✅ new route
