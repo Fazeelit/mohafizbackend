@@ -77,13 +77,19 @@ const getReportById = async (req, res) => {
 // ---------------- GET REPORTS BY VICTIM NAME ----------------
 const getReportsByVictimName = async (req, res) => {
   try {
-    const { victimName } = req.params;
+    const { victimName } = req.params; // get from URL param
 
-    if (!victimName) return res.status(400).json({ message: "Victim name is required" });
+    if (!victimName) {
+      return res.status(400).json({ message: "Victim name is required" });
+    }
 
-    const reports = await Report.find({ victimName: { $regex: victimName, $options: "i" } }).sort({ createdAt: -1 });
+    const reports = await Report.find({
+      victimName: { $regex: victimName, $options: "i" } // case-insensitive
+    }).sort({ createdAt: -1 });
 
-    if (!reports.length) return res.status(404).json({ message: "No complaints found for this victim" });
+    if (!reports.length) {
+      return res.status(404).json({ message: "No complaints found for this victim" });
+    }
 
     res.status(200).json({ reports });
   } catch (error) {
@@ -91,7 +97,6 @@ const getReportsByVictimName = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 // ---------------- UPDATE REPORT ----------------
 const updateReport = async (req, res) => {
   try {
@@ -129,11 +134,11 @@ const deleteReport = async (req, res) => {
 };
 
 // ---------------- EXPORT ALL ----------------
-export { 
-  createReport, 
-  getReports, 
-  getReportById, 
-  getReportsByVictimName, 
-  updateReport, 
-  deleteReport 
+export {
+  createReport,
+  getReports,
+  getReportById,
+  getReportsByVictimName,
+  updateReport,
+  deleteReport
 };

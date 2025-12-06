@@ -21,7 +21,7 @@ router.post("/createReport",verifyToken,uploadImage("files"), createReport);
 router.get("/",verifyToken, getReports);
 
 // @desc    Get  reports by email
-router.get("/trackVictim",verifyToken, getReportsByVictimName);
+router.get("/trackVictim/:victimName",verifyToken, getReportsByVictimName);
 
 // @desc    Get a single report by ID
 router.get("/:id",verifyToken,verifyAdmin, getReportById);
