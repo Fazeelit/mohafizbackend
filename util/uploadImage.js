@@ -19,32 +19,27 @@ const upload = multer({
 // Upload middleware
 const uploadImage = (fieldName = "file") => {
   return (req, res, next) => {
-    upload.single(fieldName)(req, res, async (err) => {
+    upload.single(fieldName)(req, res, (err) => {
       if (err) {
         return res.status(400).json({ error: "File upload failed", details: err.message });
       }
 
       if (!req.file) return next(); // No file uploaded
 
-      try {
-        // Upload buffer directly to Cloudinary
-        const result = await cloudinary.uploader.upload_stream(
-          {
-            folder: "products", // Cloudinary folder
-          },
-          (error, result) => {
-            if (error) throw error;
-            req.fileUrl = result.secure_url;
-            next();
+      // Upload buffer to Cloudinary
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: "reports" },
+        (error, result) => {
+          if (error) {
+            console.error("❌ Cloudinary upload failed:", error);
+            return res.status(500).json({ error: "Failed to upload to Cloudinary" });
           }
-        );
+          req.fileUrl = result.secure_url; // Pass the uploaded file URL
+          next();
+        }
+      );
 
-        // Pipe buffer to Cloudinary upload stream
-        result.end(req.file.buffer);
-      } catch (uploadErr) {
-        console.error("❌ Cloudinary upload failed:", uploadErr);
-        res.status(500).json({ error: "Failed to upload to Cloudinary" });
-      }
+      stream.end(req.file.buffer); // Pipe the buffer into the Cloudinary stream
     });
   };
 };
