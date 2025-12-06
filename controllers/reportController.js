@@ -20,12 +20,10 @@ const createReport = async (req, res) => {
       description,
     } = req.body;
 
-    // Validate required fields
     if (!complaintType || !victimName || !victimAge || !address || !district || !description) {
       return res.status(400).json({ message: "Required fields missing" });
     }
 
-    // STEP 1 — Create report without TrackingId
     const report = new Report({
       complaintType,
       anonymous: anonymous === "true" || anonymous === true,
@@ -40,26 +38,17 @@ const createReport = async (req, res) => {
       files: req.fileUrl || [],
     });
 
-    // Save initial document to get _id
     await report.save();
 
-    // STEP 2 — Generate tracking ID using _id
     report.TrackingId = generateTrackingId(report._id.toString());
-
-    // STEP 3 — Save again with TrackingId
     await report.save();
 
-    res.status(201).json({
-      message: "Report submitted successfully",
-      report,
-    });
-
+    res.status(201).json({ message: "Report submitted successfully", report });
   } catch (error) {
     console.error("Error creating report:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 // ---------------- GET ALL REPORTS ----------------
 const getReports = async (req, res) => {
@@ -72,17 +61,12 @@ const getReports = async (req, res) => {
   }
 };
 
-
 // ---------------- GET REPORT BY ID ----------------
 const getReportById = async (req, res) => {
   try {
     const { id } = req.params;
-
     const report = await Report.findById(id);
-    if (!report) {
-      return res.status(404).json({ message: "Report not found" });
-    }
-
+    if (!report) return res.status(404).json({ message: "Report not found" });
     res.status(200).json({ report });
   } catch (error) {
     console.error("Error fetching report:", error);
@@ -90,6 +74,23 @@ const getReportById = async (req, res) => {
   }
 };
 
+// ---------------- GET REPORTS BY VICTIM NAME ----------------
+const getReportsByVictimName = async (req, res) => {
+  try {
+    const { victimName } = req.params;
+
+    if (!victimName) return res.status(400).json({ message: "Victim name is required" });
+
+    const reports = await Report.find({ victimName: { $regex: victimName, $options: "i" } }).sort({ createdAt: -1 });
+
+    if (!reports.length) return res.status(404).json({ message: "No complaints found for this victim" });
+
+    res.status(200).json({ reports });
+  } catch (error) {
+    console.error("Error fetching reports by victim name:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 // ---------------- UPDATE REPORT ----------------
 const updateReport = async (req, res) => {
@@ -97,14 +98,11 @@ const updateReport = async (req, res) => {
     const reportId = req.params.id;
     const updatedData = req.body;
 
-    // Never allow TrackingId to be updated manually
     if (updatedData.TrackingId) delete updatedData.TrackingId;
 
     const report = await Report.findByIdAndUpdate(reportId, updatedData, { new: true });
 
-    if (!report) {
-      return res.status(404).json({ message: "Report not found" });
-    }
+    if (!report) return res.status(404).json({ message: "Report not found" });
 
     res.status(200).json(report);
   } catch (error) {
@@ -112,7 +110,6 @@ const updateReport = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
-
 
 // ---------------- DELETE REPORT ----------------
 const deleteReport = async (req, res) => {
@@ -131,6 +128,12 @@ const deleteReport = async (req, res) => {
   }
 };
 
-
 // ---------------- EXPORT ALL ----------------
-export { createReport, getReports, getReportById, updateReport, deleteReport };
+export { 
+  createReport, 
+  getReports, 
+  getReportById, 
+  getReportsByVictimName, 
+  updateReport, 
+  deleteReport 
+};
