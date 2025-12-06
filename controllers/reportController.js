@@ -1,6 +1,9 @@
 // controllers/reportController.js
 import Report from "../model/ReportModel.js";
 
+// Tracking ID Generator
+const generateTrackingId = (id) => `CMP${(id || "XXXXXX").slice(-6).toUpperCase()}`;
+
 // ---------------- CREATE REPORT ----------------
 const createReport = async (req, res) => {
   try {
@@ -15,14 +18,15 @@ const createReport = async (req, res) => {
       address,
       district,
       description,
-      files
     } = req.body;
 
+    // Validate required fields
     if (!complaintType || !victimName || !victimAge || !address || !district || !description) {
       return res.status(400).json({ message: "Required fields missing" });
     }
 
-    const newReport = new Report({
+    // STEP 1 — Create report without TrackingId
+    const report = new Report({
       complaintType,
       anonymous: anonymous === "true" || anonymous === true,
       name: anonymous ? "" : name,
@@ -33,12 +37,23 @@ const createReport = async (req, res) => {
       address,
       district,
       description,
-      files: req.imageUrl,
+      files: req.imageUrl || [],
     });
 
-    await newReport.save();
+    // Save initial document to get _id
+    await report.save();
 
-    res.status(201).json({ message: "Report submitted successfully", report: newReport });
+    // STEP 2 — Generate tracking ID using _id
+    report.TrackingId = generateTrackingId(report._id.toString());
+
+    // STEP 3 — Save again with TrackingId
+    await report.save();
+
+    res.status(201).json({
+      message: "Report submitted successfully",
+      report,
+    });
+
   } catch (error) {
     console.error("Error creating report:", error);
     res.status(500).json({ message: "Server error" });
@@ -76,16 +91,16 @@ const getReportById = async (req, res) => {
 };
 
 
-//Update Report
-
+// ---------------- UPDATE REPORT ----------------
 const updateReport = async (req, res) => {
   try {
     const reportId = req.params.id;
     const updatedData = req.body;
 
-    const report = await Report.findByIdAndUpdate(reportId, updatedData, {
-      new: true,
-    });
+    // Never allow TrackingId to be updated manually
+    if (updatedData.TrackingId) delete updatedData.TrackingId;
+
+    const report = await Report.findByIdAndUpdate(reportId, updatedData, { new: true });
 
     if (!report) {
       return res.status(404).json({ message: "Report not found" });
@@ -93,11 +108,10 @@ const updateReport = async (req, res) => {
 
     res.status(200).json(report);
   } catch (error) {
-    console.error(error);
+    console.error("Error updating report:", error);
     res.status(500).json({ message: "Server Error" });
   }
 };
-
 
 
 // ---------------- DELETE REPORT ----------------
@@ -106,9 +120,7 @@ const deleteReport = async (req, res) => {
     const { id } = req.params;
 
     const report = await Report.findById(id);
-    if (!report) {
-      return res.status(404).json({ message: "Report not found" });
-    }
+    if (!report) return res.status(404).json({ message: "Report not found" });
 
     await Report.findByIdAndDelete(id);
 
