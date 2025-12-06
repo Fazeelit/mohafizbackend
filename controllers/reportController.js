@@ -37,7 +37,7 @@ const createReport = async (req, res) => {
       address,
       district,
       description,
-      files: req.imageUrl || [],
+      files: req.fileUrl || [],
     });
 
     // Save initial document to get _id
